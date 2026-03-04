@@ -1,0 +1,28 @@
+#!/usr/local/bin/grip
+name: greeter
+description: Greet a user by name, pretty-printed. Optionally exclaims the greeting.
+version: 0.1.0
+
+commands:
+  - name: greet
+    description: Greet a user by name, using pretty-printed output.
+    arguments:
+      - name: name
+        bind_to: NAME
+        description: Name of the person to greet
+        required: false
+        default: "User"
+    options:
+      - name: --exclaim
+        bind_to: EXCLAIM
+        description: Whether to add an exclamation mark
+        required: false
+        default: false
+        is_flag: true
+    action: |
+      BLUE="\033[34m"
+      NC="\033[0m"
+      if [ "${EXCLAIM,,}" = "true" ]; then
+        NAME="$NAME${BLUE}!${NC}"
+      fi
+      echo -e "${BLUE}Hello, ${NC}$NAME"
