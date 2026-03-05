@@ -1,4 +1,4 @@
-#!/usr/local/bin/grip
+#!/usr/local/bin/saran
 name: greeter
 description: Greet a user by name, pretty-printed. Optionally exclaims the greeting.
 version: 0.1.0

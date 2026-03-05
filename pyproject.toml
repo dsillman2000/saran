@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "grip"
+name = "saran"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -11,4 +11,4 @@ requires-python = ">=3.12"
 dependencies = ["click>=8.3.1", "pydantic>=2.12.5", "yaml-reference>=2.6.2"]
 
 [project.scripts]
-grip = "grip.cli:main"
+saran = "saran.cli:main"

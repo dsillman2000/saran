@@ -44,7 +44,7 @@ def _convert_click_type(type_str: Optional[str]) -> Optional[type]:
     return str
 
 
-class GripOption(pydantic.BaseModel):
+class SaranOption(pydantic.BaseModel):
     name: str
     bind_to: Optional[str] = None
     description: Optional[str] = None
@@ -68,7 +68,7 @@ class GripOption(pydantic.BaseModel):
         return opt
 
 
-class GripArgument(pydantic.BaseModel):
+class SaranArgument(pydantic.BaseModel):
     name: str
     description: Optional[str] = None
     bind_to: Optional[str] = None
@@ -81,23 +81,23 @@ class GripArgument(pydantic.BaseModel):
         return arg
 
 
-class GripActionResult(pydantic.BaseModel):
-    """Result of executing a grip action."""
+class SaranActionResult(pydantic.BaseModel):
+    """Result of executing a saran action."""
     stdout: str = ""
     stderr: str = ""
     exit_code: int = 0
 
 
-class GripCommand(pydantic.BaseModel):
+class SaranCommand(pydantic.BaseModel):
     name: str
     action: str
     description: Optional[str] = None
     docstring: Optional[str] = None
-    arguments: Optional[list[GripArgument]] = None
-    options: Optional[list[GripOption]] = None
-    subcommands: Optional[list["GripCommand"]] = None
+    arguments: Optional[list[SaranArgument]] = None
+    options: Optional[list[SaranOption]] = None
+    subcommands: Optional[list["SaranCommand"]] = None
 
-    def execute_action(self, kwargs: dict) -> GripActionResult:
+    def execute_action(self, kwargs: dict) -> SaranActionResult:
         """Execute the bash action with exported variables, return result."""
         action = self.action
         for arg in self.arguments or []:
@@ -117,7 +117,7 @@ class GripCommand(pydantic.BaseModel):
             ["bash", "-c", action], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
         ) as proc:
             stdout, stderr = proc.communicate()
-            return GripActionResult(
+            return SaranActionResult(
                 stdout=stdout.decode(),
                 stderr=stderr.decode(),
                 exit_code=proc.returncode,
@@ -179,11 +179,11 @@ class GripCommand(pydantic.BaseModel):
             return cmd
 
 
-class GripCLI(pydantic.BaseModel):
+class SaranCLI(pydantic.BaseModel):
     name: str
     description: Optional[str] = None
     version: Optional[str] = None
-    commands: Optional[list["GripCommand"]] = None
+    commands: Optional[list["SaranCommand"]] = None
 
     def to_group(self) -> Group:
         def _main():

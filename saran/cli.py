@@ -4,22 +4,22 @@ from pathlib import Path
 import yaml_reference
 from pydantic import BaseModel, ValidationError
 
-from grip.model import GripCLI
+from saran.model import SaranCLI
 
 
 def main():
-    """Read a YAML file and parse it into GripCLI model."""
+    """Read a YAML file and parse it into SaranCLI model."""
     try:
         input_file = sys.argv[1]
         file_path = Path(input_file)
         
-        # Set $GRIP to the absolute path of the CLI script
+        # Set $SARAN to the absolute path of the CLI script
         import os
-        os.environ['GRIP'] = str(file_path.resolve())
+        os.environ['SARAN'] = str(file_path.resolve())
         
         data = yaml_reference.load_yaml_with_references(file_path)
 
-        config = GripCLI(**data)
+        config = SaranCLI(**data)
         cli_group = config.to_group()
         sys.argv = sys.argv[1:]
         cli_group()
