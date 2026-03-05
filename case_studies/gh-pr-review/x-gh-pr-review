@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+cat case_studies/gh-pr-review/gh-pr-review.template | envsubst '$repo $id' > \
+    case_studies/gh-pr-review/gh-pr-review
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to generate gh-pr-review script." >&2
+    exit 1
+fi
+
+GH_PR_REVIEW="$(dirname "${BASH_SOURCE[0]}")/gh-pr-review"
+chmod +x "$GH_PR_REVIEW"
+cp "$GH_PR_REVIEW" "$HOME/.local/bin/gh-pr-review"

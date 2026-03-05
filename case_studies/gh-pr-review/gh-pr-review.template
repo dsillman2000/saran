@@ -1,0 +1,44 @@
+#!/usr/bin/env saran
+name: gh-pr-review
+description: |
+  A CLI wrapper around `gh pr` commands to review the pull request with ID = ${id} in the repository ${repo}.
+version: 1.0.0
+commands:
+  - name: view
+    description: Display the title, body, and other information about the pull request.
+    actions:
+      - gh: ["pr", "view", "-R", "${repo}", "${id}"]
+  - name: diff
+    description: View changes in the pull request.
+    options:
+      - name: --patch
+        bind_to: PATCH
+        description: Show the patch (diff) of the pull request.
+        type: bool
+        default: false
+        is_flag: true
+    actions:
+      - gh: ["pr", "diff", "-R", "${repo}", "${id}", "$PATCH"]
+  - name: checks
+    description: |
+      Show CI status for the pull request.
+
+      When the `--json` flag is used, it includes a `bucket` field, which categorizes
+      the `state` field into `pass`, `fail`, `pending`, `skipping`, or `cancel`.
+
+      Additional exit codes:
+        8: Checks pending
+    options:
+      - name: --json
+        bind_to: JSON
+        description: |
+          Output in JSON format with the specified fields (comma-separated). Fields may be any of:
+          [bucket, completedAt, description, event, link, name, startedAt, state, workflow]
+        type: str
+        default: ""
+    actions:
+      - gh: ["pr", "checks", "-R", "${repo}", "${id}", "${JSON:+--json $JSON}"]
+  - name: checkout
+    description: Check out the pull request in git.
+    actions:
+      - gh: ["pr", "checkout", "-R", "${repo}", "${id}"]

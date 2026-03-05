@@ -1,6 +1,0 @@
-#!/usr/local/bin/saran
-name: gh-ro
-description: |-
-  A read-only shim of the GitHub CLI. Demonstrates how a read-only version of a CLI can be implemented as a Saran.
-version: 0.1.0
-commands: !reference-all { glob: commands/*.yaml }

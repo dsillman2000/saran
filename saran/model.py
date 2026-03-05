@@ -18,9 +18,11 @@ from click import (
     version_option,
 )
 
+from saran.action import SaranAction
+
 
 def _convert_to_bash_value(value: Any) -> str:
-    """Convert a Python value to a bash-compatible string."""
+    """Convert a Python value to an environment variable string."""
     if value is None:
         return ""
     if isinstance(value, bool):
@@ -53,6 +55,10 @@ class SaranOption(pydantic.BaseModel):
     type: Optional[str] = None
     is_flag: Optional[bool] = None
 
+    def param_name(self) -> str:
+        """Return the Click kwargs key for this option name."""
+        return self.name.lstrip("-").replace("-", "_")
+
     def to_option(self) -> Option:
         is_flag = self.is_flag or (self.type == "bool" or (self.type is None and self.default in ("true", "false")))
         default_val = self.default in ("true", True) if is_flag else self.default
@@ -76,6 +82,10 @@ class SaranArgument(pydantic.BaseModel):
     required: Optional[bool] = None
     default: Optional[Any] = None
 
+    def param_name(self) -> str:
+        """Return the Click kwargs key for this argument name."""
+        return self.name.strip("<>").replace("-", "_")
+
     def to_argument(self) -> Argument:
         arg = argument(self.name, required=self.required, default=self.default)
         return arg
@@ -83,6 +93,7 @@ class SaranArgument(pydantic.BaseModel):
 
 class SaranActionResult(pydantic.BaseModel):
     """Result of executing a saran action."""
+
     stdout: str = ""
     stderr: str = ""
     exit_code: int = 0
@@ -90,38 +101,72 @@ class SaranActionResult(pydantic.BaseModel):
 
 class SaranCommand(pydantic.BaseModel):
     name: str
-    action: str
+    actions: list[SaranAction]
     description: Optional[str] = None
     docstring: Optional[str] = None
     arguments: Optional[list[SaranArgument]] = None
     options: Optional[list[SaranOption]] = None
     subcommands: Optional[list["SaranCommand"]] = None
 
-    def execute_action(self, kwargs: dict) -> SaranActionResult:
-        """Execute the bash action with exported variables, return result."""
-        action = self.action
+    def _build_bound_environment(self, kwargs: dict[str, Any]) -> dict[str, str]:
+        """Build environment variables defined by argument/option bind_to settings."""
+        bound_env: dict[str, str] = {}
+
         for arg in self.arguments or []:
-            if arg.bind_to and arg.name in kwargs:
-                action = f"export {arg.bind_to}='{_convert_to_bash_value(kwargs[arg.name])}'\n" + action
+            key = arg.param_name()
+            if arg.bind_to and key in kwargs:
+                bound_env[arg.bind_to] = _convert_to_bash_value(kwargs[key])
+
         for opt in self.options or []:
-            if opt.bind_to and opt.name.lstrip("-") in kwargs:
-                action = f"export {opt.bind_to}='{_convert_to_bash_value(kwargs[opt.name.lstrip('-')])}'\n" + action
-        
-        # Prepare environment to force color output
+            key = opt.param_name()
+            if not opt.bind_to or key not in kwargs:
+                continue
+
+            value = kwargs[key]
+            if opt.is_flag:
+                # Preserve the semantic value of flags by using the CLI flag token.
+                bound_env[opt.bind_to] = opt.name if value else ""
+            else:
+                bound_env[opt.bind_to] = _convert_to_bash_value(value)
+
+        return bound_env
+
+    def execute_action(self, kwargs: dict) -> SaranActionResult:
+        """Execute actions sequentially using subprocess without invoking a shell."""
+        # Prepare environment and keep colorized output behavior.
         env = os.environ.copy()
-        env['FORCE_COLOR'] = '1'
-        env['CLICOLOR_FORCE'] = '1'
-        env['PY_COLORS'] = '1'
-        
-        with subprocess.Popen(
-            ["bash", "-c", action], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
-        ) as proc:
-            stdout, stderr = proc.communicate()
-            return SaranActionResult(
-                stdout=stdout.decode(),
-                stderr=stderr.decode(),
-                exit_code=proc.returncode,
+        env.update(self._build_bound_environment(kwargs))
+        env["FORCE_COLOR"] = "1"
+        env["CLICOLOR_FORCE"] = "1"
+        env["PY_COLORS"] = "1"
+
+        stdout_chunks: list[str] = []
+        stderr_chunks: list[str] = []
+        exit_code = 0
+
+        for action in self.actions:
+            argv = action.to_argv(env)
+            result = subprocess.run(
+                argv,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=env,
+                text=True,
+                shell=False,
             )
+
+            stdout_chunks.append(result.stdout)
+            stderr_chunks.append(result.stderr)
+            exit_code = result.returncode
+
+            if result.returncode != 0:
+                break
+
+        return SaranActionResult(
+            stdout="".join(stdout_chunks),
+            stderr="".join(stderr_chunks),
+            exit_code=exit_code,
+        )
 
     def to_command(self) -> Command | Group:
         # If this command has subcommands, create a Group; otherwise create a Command
@@ -131,7 +176,7 @@ class SaranCommand(pydantic.BaseModel):
                 # Only execute the group's action if no subcommand was invoked
                 if ctx.invoked_subcommand is not None:
                     return
-                
+
                 # Execute group's action
                 result = self.execute_action(kwargs)
                 if result.exit_code != 0:
