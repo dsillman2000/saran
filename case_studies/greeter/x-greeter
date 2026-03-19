@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-GREETER="$(dirname "${BASH_SOURCE[0]}")/greeter"
-chmod +x "$GREETER"
-cp "$GREETER" "$HOME/.local/bin/greeter"
