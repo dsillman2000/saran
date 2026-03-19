@@ -37,8 +37,10 @@ agent, preventing it from taking destructive actions while still giving it the a
 
 | File | Description |
 |---|---|
-| [`spec/examples/gh-pr-ro.yaml`](spec/examples/gh-pr-ro.yaml) | Read-only wrapper for `gh pr` — exposes `list`, `status`, `view`, `diff`, `checks`, `checkout` |
-| [`spec/examples/gh-issue-ro.yaml`](spec/examples/gh-issue-ro.yaml) | Read-only wrapper for `gh issue` — exposes `list`, `status`, `view` |
+| [`spec/examples/gh-pr-ro.yaml`](spec/examples/gh-pr-ro.yaml) | Read-only wrapper for `gh pr` — exposes `list`, `status`, `view`, `diff`, `checks`, `checkout` with no fixed repo scope |
+| [`spec/examples/gh-pr-repo-ro.yaml`](spec/examples/gh-pr-repo-ro.yaml) | Repo-locked variant of `gh-pr-ro` — requires `GH_REPO` to be set via `saran env` |
+| [`spec/examples/gh-issue-ro.yaml`](spec/examples/gh-issue-ro.yaml) | Read-only wrapper for `gh issue` — exposes `list`, `status`, `view` with no fixed repo scope |
+| [`spec/examples/gh-issue-repo-ro.yaml`](spec/examples/gh-issue-repo-ro.yaml) | Repo-locked variant of `gh-issue-ro` — requires `GH_REPO` to be set via `saran env` |
 | [`spec/examples/greet.yaml`](spec/examples/greet.yaml) | Minimal wrapper demonstrating positional arguments |
 
 ---

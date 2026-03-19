@@ -225,6 +225,30 @@ Values from `vars:` and caller-supplied positional arguments (declared in `args:
 
 > **Resolution timing:** `$VAR_NAME` in action argument arrays resolves against already-resolved `vars:` values (computed at startup) and caller-supplied `args` values (available at invocation). There is no re-resolution against the host environment at invocation time.
 
+#### `$VAR_NAME` in `help:` strings
+
+`$VAR_NAME` interpolation is supported in **any `help:` field** in the YAML document — top-level, command-level, `args` entries, `optional_flags` entries, and `vars` entries. This allows help text to reflect environment-specific values (e.g. the actual repo name) rather than hard-coded placeholders.
+
+```yaml
+vars:
+  - name: GH_REPO
+    default: myorg/myrepo
+    help: "Target repository in OWNER/REPO format"
+
+help: "Read-only gh pr operations for $GH_REPO"
+
+commands:
+  list:
+    help: "List pull requests in $GH_REPO"
+    ...
+```
+
+**Scope restriction:** `$VAR_NAME` references in `help:` strings are limited to **top-level `vars:` names only**. `args` `var_name` values are not valid in help strings — they are command-scoped positional values that are not yet known when help text is rendered at startup.
+
+**Resolution timing:** `help:` string interpolation resolves at startup, immediately after `vars:` resolution. If a required var has not been set in any resolution layer at help-display time, the literal `$VAR_NAME` token is shown in its place (no error is raised — the missing-var runtime error is reported separately).
+
+**Syntax rules:** The same parsing rule applies as for action arrays — `$VAR_NAME` is a greedy match of `[A-Za-z_][A-Za-z0-9_]*` after the `$`. A bare `$` or `$` followed by a digit in a `help:` string is a validation error.
+
 ---
 
 ## Optional Flag Definition
@@ -444,6 +468,8 @@ Saran must reject a malformed wrapper file with a descriptive error. The followi
 - A `vars:` `name` does not satisfy `[A-Za-z_][A-Za-z0-9_]*`
 - A `$VAR_NAME` reference in an `actions` entry's argument array resolves to neither a `vars:` name nor an `args` `var_name`
 - A `$VAR_NAME` pattern in an `actions` entry's argument array uses invalid syntax (e.g. a bare trailing `$`, or `$` followed by a digit)
+- A `$VAR_NAME` reference in any `help:` string resolves to a name not declared in top-level `vars:`
+- A `$VAR_NAME` pattern in any `help:` string uses invalid syntax (e.g. a bare trailing `$`, or `$` followed by a digit)
 - An `args` entry is missing `name`, `var_name`, or `type`
 - An `args` `type` is not `str`
 - An `args` `var_name` conflicts with a `vars:` name or another `args` `var_name` in the same command
@@ -459,6 +485,41 @@ Saran must reject a malformed wrapper file with a descriptive error. The followi
 If the generated CLI is invoked with no subcommand — or with `--help` — it prints the top-level help text (populated from `name` and `help`) and the list of available subcommands, then exits successfully. This mirrors standard `clap` behavior for multi-subcommand CLIs.
 
 Invoking with an unrecognized subcommand is an error; `clap` will print an error message and exit with a non-zero status.
+
+---
+
+## Design Patterns
+
+### Scope-locked vs. open wrappers
+
+A common decision when authoring a wrapper is whether to fix a resource scope (e.g. a specific repository) into the wrapper itself, or to leave it open.
+
+**Open wrapper** — omit the scoping variable entirely. The caller (or ambient environment) controls scope through the underlying CLI's own mechanisms. Suitable when the wrapper is shared across multiple projects.
+
+```yaml
+# gh-pr-ro: no GH_REPO var, no -R flag — works against any repo
+commands:
+  list:
+    actions:
+      - gh: [pr, list]
+```
+
+**Scope-locked wrapper** — declare the scoping variable as `required: true` with no `default:`. The wrapper will refuse to start unless the variable is set in the environment or `saran env`. Suitable for project-specific wrappers that should never accidentally operate against the wrong resource.
+
+```yaml
+# gh-pr-repo-ro: GH_REPO must be set — always operates on the declared repo
+vars:
+  - name: GH_REPO
+    required: true
+    help: "Target repository in OWNER/REPO format"
+commands:
+  list:
+    help: "List pull requests in $GH_REPO"
+    actions:
+      - gh: [pr, list, -R, "$GH_REPO"]
+```
+
+> **Note:** There is intentionally no "optional scoping" model — a var with no `required:` and no `default:` is a validation error. Scope is either fixed (required) or absent (not declared). This keeps the wrapper's contract unambiguous.
 
 ---
 
