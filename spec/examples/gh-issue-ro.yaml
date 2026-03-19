@@ -1,0 +1,91 @@
+# gh-issue-ro
+#
+# A Saran wrapper around `gh issue` exposing all read-only subcommands for a
+# fixed repository. Intended for use by an LLM agent inspecting issues without
+# the ability to create, edit, close, delete, comment, or otherwise mutate
+# GitHub state.
+#
+# Excluded (mutating): create, close, comment, delete, develop, edit, lock,
+#                      pin, reopen, transfer, unlock, unpin
+#
+# Included (read-only): list, status, view
+
+name: gh-issue-ro
+version: "1.0.0"
+help: "Read-only gh issue operations for myorg/myrepo"
+
+requires:
+  - cli: gh
+    version: ">=2.0.0"
+
+vars:
+  - name: GH_TOKEN
+    required: true
+    help: "GitHub auth token — must be set in host environment, not in saran env"
+  - name: GH_REPO
+    default: myorg/myrepo
+    help: "Target repository in OWNER/REPO format"
+
+commands:
+
+  list:
+    help: "List issues in the repository (open by default)"
+    actions:
+      - gh: [issue, list, -R, "$GH_REPO"]
+        optional_flags:
+          - name: --state
+            type: enum
+            values: [open, closed, all]
+            help: "Filter by state (default: open)"
+          - name: --assignee
+            type: str
+            help: "Filter by assignee username, or @me"
+          - name: --author
+            type: str
+            help: "Filter by author username"
+          - name: --label
+            type: str
+            repeated: true
+            help: "Filter by label (may be specified multiple times)"
+          - name: --milestone
+            type: str
+            help: "Filter by milestone number or title"
+          - name: --mention
+            type: str
+            help: "Filter by mentioned username"
+          - name: --limit
+            type: int
+            help: "Maximum number of issues to return (default: 30)"
+          - name: --search
+            type: str
+            help: "Search issues with a query string (GitHub issue search syntax)"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. number,title,state,labels)"
+
+  status:
+    help: "Show issues relevant to you (assigned, mentioned, opened)"
+    actions:
+      - gh: [issue, status, -R, "$GH_REPO"]
+        optional_flags:
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields"
+
+  view:
+    help: "View an issue by number or URL"
+    args:
+      - name: issue
+        var_name: ISSUE_REF
+        type: str
+        required: true
+        help: "Issue number or URL"
+    actions:
+      - gh: [issue, view, "$ISSUE_REF", -R, "$GH_REPO"]
+        optional_flags:
+          - name: --comments
+            type: bool
+            help: "Include issue comments in the output"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. number,title,body,state,labels,comments)"

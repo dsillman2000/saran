@@ -1,0 +1,35 @@
+# greet
+#
+# A minimal Saran wrapper demonstrating caller-supplied positional arguments.
+# The caller supplies a name at runtime; the greeting text is fixed by the subcommand.
+#
+# Usage:
+#   greet hello <name>          → Hello, <name>
+#   greet hello-exclaim <name>  → Hello, <name>!
+
+name: greet
+version: "0.1.0"
+help: "Greet someone by name"
+
+commands:
+  hello:
+    help: "Greet someone plainly"
+    args:
+      - name: name
+        var_name: NAME
+        type: str
+        required: true
+        help: "The name of the person to greet"
+    actions:
+      - printf: ["Hello, %s\n", "$NAME"]
+
+  hello-exclaim:
+    help: "Greet someone enthusiastically"
+    args:
+      - name: name
+        var_name: NAME
+        type: str
+        required: true
+        help: "The name of the person to greet"
+    actions:
+      - printf: ["Hello, %s!\n", "$NAME"]
