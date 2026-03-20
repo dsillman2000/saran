@@ -61,6 +61,9 @@ commands:
           - name: --json
             type: str
             help: "Output JSON with the specified comma-separated fields (e.g. number,title,state,labels)"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
 
   status:
     help: "Show issues relevant to you (assigned, mentioned, opened)"
@@ -70,6 +73,9 @@ commands:
           - name: --json
             type: str
             help: "Output JSON with the specified comma-separated fields"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
 
   view:
     help: "View an issue by number or URL"
@@ -88,3 +94,6 @@ commands:
           - name: --json
             type: str
             help: "Output JSON with the specified comma-separated fields (e.g. number,title,body,state,labels,comments)"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"

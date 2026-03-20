@@ -1,0 +1,159 @@
+# glab-issue.repo.ro
+#
+# A Saran wrapper around `glab issue` exposing all read-only subcommands locked
+# to a specific repository. Intended for use by an LLM agent that should only
+# ever inspect issues for one known repository.
+#
+# GLAB_REPO must be set before the wrapper will start — configure it via:
+#   saran env set glab-issue.repo.ro GLAB_REPO myorg/myrepo
+#
+# Excluded (mutating): close, create, delete, note, reopen, subscribe,
+#                      unsubscribe, update, board create
+#
+# Included (read-only): list, view, board-view
+#
+# See glab-issue.ro.yaml for a variant with no fixed repository scope.
+
+name: glab-issue.repo.ro
+version: "1.0.0"
+help: "Read-only glab issue operations for $GLAB_REPO"
+
+requires:
+  - cli: glab
+    version: ">=1.89.0"
+
+vars:
+  - name: GITLAB_TOKEN
+    required: true
+    help: "GitLab auth token — must be set in host environment, not in saran env"
+  - name: GLAB_REPO
+    required: true
+    help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format (e.g. myorg/myrepo)"
+
+commands:
+  list:
+    help: "List issues in $GLAB_REPO"
+    actions:
+      - glab: [issue, list, -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --all
+            type: bool
+            help: "Get all issues regardless of state"
+          - name: --assignee
+            type: str
+            help: "Filter by assignee username"
+          - name: --author
+            type: str
+            help: "Filter by author username"
+          - name: --closed
+            type: bool
+            help: "Get only closed issues"
+          - name: --confidential
+            type: bool
+            help: "Filter by confidential issues"
+          - name: --in
+            type: str
+            help: "Search in fields: title, description (default: title,description)"
+          - name: --issue-type
+            type: enum
+            values: [issue, incident, test_case]
+            help: "Filter by issue type"
+          - name: --iteration
+            type: str
+            help: "Filter by iteration ID"
+          - name: --label
+            type: str
+            repeated: true
+            help: "Filter by label (may be specified multiple times, or comma-separated)"
+          - name: --not-label
+            type: str
+            help: "Exclude issues with label (comma-separated)"
+          - name: --milestone
+            type: str
+            help: "Filter by milestone ID"
+          - name: --not-assignee
+            type: str
+            help: "Exclude issues assigned to username"
+          - name: --not-author
+            type: str
+            help: "Exclude issues authored by username"
+          - name: --search
+            type: str
+            help: "Search string (searched in fields specified by --in)"
+          - name: --order
+            type: enum
+            values:
+              [
+                created_at,
+                updated_at,
+                priority,
+                due_date,
+                relative_position,
+                label_priority,
+                milestone_due,
+                popularity,
+                weight,
+              ]
+            help: "Order issues by field (default: created_at)"
+          - name: --sort
+            type: enum
+            values: [asc, desc]
+            help: "Sort direction for --order (default: desc)"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --output-format
+            type: enum
+            values: [details, ids, urls]
+            help: "Output format details: details, ids, or urls (default: details)"
+          - name: --page
+            type: int
+            help: "Page number (default: 1)"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 30)"
+
+  view:
+    help: "Display the title, body, and other information about an issue in $GLAB_REPO"
+    args:
+      - name: issue
+        var_name: ISSUE_REF
+        type: str
+        required: true
+        help: "Issue ID or URL"
+    actions:
+      - glab: [issue, view, "$ISSUE_REF", -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --comments
+            type: bool
+            help: "Show issue comments and activities"
+          - name: --system-logs
+            type: bool
+            help: "Show system activities and logs"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number for paginated comment output (default: 1)"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 20)"
+
+  board-view:
+    help: "View the issue board for $GLAB_REPO"
+    actions:
+      - glab: [issue, board, view, -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --assignee
+            type: str
+            help: "Filter board issues by assignee username"
+          - name: --labels
+            type: str
+            repeated: true
+            help: "Filter board issues by label (may be specified multiple times, or comma-separated)"
+          - name: --milestone
+            type: str
+            help: "Filter board issues by milestone"

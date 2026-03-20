@@ -65,6 +65,9 @@ commands:
           - name: --json
             type: str
             help: "Output JSON with the specified comma-separated fields (e.g. number,title,state,author)"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
 
   status:
     help: "Show status of pull requests relevant to you"
@@ -77,6 +80,9 @@ commands:
           - name: --json
             type: str
             help: "Output JSON with the specified comma-separated fields"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
 
   view:
     help: "View a pull request by number, URL, or branch name"
@@ -95,6 +101,9 @@ commands:
           - name: --json
             type: str
             help: "Output JSON with the specified comma-separated fields (e.g. number,title,body,state,reviews)"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
 
   diff:
     help: "View the diff for a pull request"
@@ -117,6 +126,9 @@ commands:
             type: enum
             values: [always, never, auto]
             help: "Use color in diff output (default: auto)"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
 
   checks:
     help: "Show CI check statuses for a pull request"
@@ -144,6 +156,9 @@ commands:
           - name: --json
             type: str
             help: "Output JSON with the specified comma-separated fields (e.g. name,state,bucket)"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
 
   checkout:
     help: "Check out a pull request branch locally"
@@ -168,3 +183,6 @@ commands:
           - name: --recurse-submodules
             type: bool
             help: "Update all submodules after checkout"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"

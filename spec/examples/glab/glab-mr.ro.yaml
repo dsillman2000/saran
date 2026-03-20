@@ -1,0 +1,241 @@
+# glab-mr.ro
+#
+# A Saran wrapper around `glab mr` exposing all read-only subcommands with no
+# fixed repository scope. Intended for use by an LLM agent inspecting merge
+# requests across any repository. The caller's ambient glab context (e.g. a
+# cloned repo directory or GLAB_REPO set outside saran) determines which
+# repository is targeted.
+#
+# Excluded (mutating): approve, close, create, delete, for, merge, note,
+#                      rebase, reopen, revoke, subscribe, todo, unsubscribe,
+#                      update
+#
+# Included (read-only): list, view, diff, checkout, approvers, issues
+#
+# See glab-mr.repo.ro.yaml for a variant that locks operations to a specific
+# repository via a required GLAB_REPO variable.
+
+name: glab-mr.ro
+version: "1.0.0"
+help: "Read-only glab mr operations (no fixed repo scope)"
+
+requires:
+  - cli: glab
+    version: ">=1.89.0"
+
+vars:
+  - name: GITLAB_TOKEN
+    required: true
+    help: "GitLab auth token — must be set in host environment, not in saran env"
+
+commands:
+  list:
+    help: "List merge requests"
+    actions:
+      - glab: [mr, list]
+        optional_flags:
+          - name: --all
+            type: bool
+            help: "Get all merge requests regardless of state"
+          - name: --assignee
+            type: str
+            repeated: true
+            help: "Filter by assigned user (may be specified multiple times, or comma-separated)"
+          - name: --author
+            type: str
+            help: "Filter by author username"
+          - name: --closed
+            type: bool
+            help: "Get only closed merge requests"
+          - name: --merged
+            type: bool
+            help: "Get only merged merge requests"
+          - name: --draft
+            type: bool
+            help: "Filter to draft merge requests only"
+          - name: --not-draft
+            type: bool
+            help: "Filter to non-draft merge requests only"
+          - name: --label
+            type: str
+            repeated: true
+            help: "Filter by label (may be specified multiple times, or comma-separated)"
+          - name: --not-label
+            type: str
+            help: "Exclude MRs with label (comma-separated)"
+          - name: --milestone
+            type: str
+            help: "Filter by milestone ID"
+          - name: --reviewer
+            type: str
+            repeated: true
+            help: "Filter by reviewer username (may be specified multiple times, or comma-separated)"
+          - name: --search
+            type: str
+            help: "Filter by string in title and description"
+          - name: --source-branch
+            type: str
+            help: "Filter by source branch name"
+          - name: --target-branch
+            type: str
+            help: "Filter by target branch name"
+          - name: --environment
+            type: str
+            help: "Filter by deployment environment name"
+          - name: --created-after
+            type: str
+            help: "Filter MRs created after this date (ISO 8601)"
+          - name: --created-before
+            type: str
+            help: "Filter MRs created before this date (ISO 8601)"
+          - name: --deployed-after
+            type: str
+            help: "Filter MRs deployed after this date (ISO 8601)"
+          - name: --deployed-before
+            type: str
+            help: "Filter MRs deployed before this date (ISO 8601)"
+          - name: --order
+            type: enum
+            values:
+              [
+                created_at,
+                updated_at,
+                merged_at,
+                title,
+                priority,
+                label_priority,
+                milestone_due,
+                popularity,
+              ]
+            help: "Order merge requests by field"
+          - name: --sort
+            type: enum
+            values: [asc, desc]
+            help: "Sort direction for --order (default: desc)"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number (default: 1)"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 30)"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format"
+
+  view:
+    help: "Display title, body, and other information about a merge request"
+    args:
+      - name: mr
+        var_name: MR_REF
+        type: str
+        required: true
+        help: "Merge request ID or source branch name"
+    actions:
+      - glab: [mr, view, "$MR_REF"]
+        optional_flags:
+          - name: --comments
+            type: bool
+            help: "Show merge request comments and activities"
+          - name: --resolved
+            type: bool
+            help: "Show only resolved discussions (implies --comments)"
+          - name: --unresolved
+            type: bool
+            help: "Show only unresolved discussions (implies --comments)"
+          - name: --system-logs
+            type: bool
+            help: "Show system activities and logs"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number for paginated comment output"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 20)"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format"
+
+  diff:
+    help: "View changes in a merge request"
+    args:
+      - name: mr
+        var_name: MR_REF
+        type: str
+        required: true
+        help: "Merge request ID or source branch name"
+    actions:
+      - glab: [mr, diff, "$MR_REF"]
+        optional_flags:
+          - name: --color
+            type: enum
+            values: [always, never, auto]
+            help: "Use color in diff output (default: auto)"
+          - name: --raw
+            type: bool
+            help: "Use raw diff format suitable for piping"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format"
+
+  checkout:
+    help: "Check out an open merge request locally"
+    args:
+      - name: mr
+        var_name: MR_REF
+        type: str
+        required: true
+        help: "Merge request ID, source branch name, or URL"
+    actions:
+      - glab: [mr, checkout, "$MR_REF"]
+        optional_flags:
+          - name: --branch
+            type: str
+            help: "Check out merge request under an alternative local branch name"
+          - name: --set-upstream-to
+            type: str
+            help: "Set tracking of checked-out branch to [REMOTE/]BRANCH"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format"
+
+  approvers:
+    help: "List eligible approvers for a merge request"
+    args:
+      - name: mr
+        var_name: MR_REF
+        type: str
+        required: true
+        help: "Merge request ID or source branch name"
+    actions:
+      - glab: [mr, approvers, "$MR_REF"]
+        optional_flags:
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format"
+
+  issues:
+    help: "List issues related to a merge request"
+    args:
+      - name: mr
+        var_name: MR_REF
+        type: str
+        required: true
+        help: "Merge request ID or source branch name"
+    actions:
+      - glab: [mr, issues, "$MR_REF"]
+        optional_flags:
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format"
