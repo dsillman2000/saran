@@ -1,0 +1,114 @@
+# gh-release-repo-ro
+#
+# A Saran wrapper around `gh release` exposing all read-only subcommands locked
+# to a specific repository. Intended for use by an LLM agent that should only
+# ever inspect releases for one known repository.
+#
+# GH_REPO must be set before the wrapper will start — configure it via:
+#   saran env set gh-release-repo-ro GH_REPO myorg/myrepo
+#
+# Excluded (mutating): create, delete, delete-asset, edit, upload
+# Excluded (not wrapped): verify, verify-asset
+#
+# Included (read-only): list, view, download
+#
+# Note: `view` and `download` require an explicit tag name. Use `list` first to
+# discover available tags, then pass the tag to `view` or `download`.
+
+name: gh-release-repo-ro
+version: "1.0.0"
+help: "Read-only gh release operations for $GH_REPO"
+
+requires:
+  - cli: gh
+    version: ">=2.0.0"
+
+vars:
+  - name: GH_TOKEN
+    required: true
+    help: "GitHub auth token — must be set in host environment, not in saran env"
+  - name: GH_REPO
+    required: true
+    help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
+
+commands:
+  list:
+    help: "List releases in $GH_REPO"
+    actions:
+      - gh: [release, list, -R, "$GH_REPO"]
+        optional_flags:
+          - name: --exclude-drafts
+            type: bool
+            help: "Exclude draft releases"
+          - name: --exclude-pre-releases
+            type: bool
+            help: "Exclude pre-releases"
+          - name: --jq
+            type: str
+            help: "Filter JSON output using a jq expression"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. tagName,name,isLatest,publishedAt)"
+          - name: --limit
+            type: int
+            help: "Maximum number of releases to return (default: 30)"
+          - name: --order
+            type: enum
+            values: [asc, desc]
+            help: "Order of releases returned (default: desc)"
+          - name: --template
+            type: str
+            help: "Format JSON output using a Go template"
+
+  view:
+    help: "View information about a release in $GH_REPO by tag name"
+    args:
+      - name: tag
+        var_name: TAG
+        type: str
+        required: true
+        help: "Release tag name (e.g. v1.2.3)"
+    actions:
+      - gh: [release, view, "$TAG", -R, "$GH_REPO"]
+        optional_flags:
+          - name: --jq
+            type: str
+            help: "Filter JSON output using a jq expression"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. tagName,name,body,assets,publishedAt)"
+          - name: --template
+            type: str
+            help: "Format JSON output using a Go template"
+
+  download:
+    help: "Download assets from a release in $GH_REPO by tag name"
+    args:
+      - name: tag
+        var_name: TAG
+        type: str
+        required: true
+        help: "Release tag name (e.g. v1.2.3)"
+    actions:
+      - gh: [release, download, "$TAG", -R, "$GH_REPO"]
+        optional_flags:
+          - name: --archive
+            type: enum
+            values: [zip, tar.gz]
+            help: "Download the source code archive in the specified format"
+          - name: --clobber
+            type: bool
+            help: "Overwrite existing files of the same name"
+          - name: --dir
+            type: str
+            help: "Directory to download files into (default: .)"
+          - name: --output
+            type: str
+            help: "File to write a single asset to (use - to write to standard output)"
+          - name: --pattern
+            type: str
+            repeated: true
+            help: "Download only assets matching a glob pattern (may be specified multiple times)"
+          - name: --skip-existing
+            type: bool
+            help: "Skip downloading when files of the same name already exist"

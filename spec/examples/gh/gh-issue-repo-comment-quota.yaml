@@ -1,0 +1,125 @@
+# gh-issue-repo-comment-quota
+#
+# A Saran wrapper around `gh issue` providing read-only inspection of issues in
+# a fixed repository, plus a quota-guarded `comment` command. Both the target
+# repository (GH_REPO) and the target issue (GH_ISSUE) are locked in vars by
+# the operator — the agent cannot comment on any other issue.
+#
+# This mirrors gh-pr-repo-comment-quota exactly: the operator pins a single
+# resource (repo + issue) and the quota (GH_ISSUE_COMMENT_QUOTA) bounds how
+# many times the agent may comment on that issue.
+#
+# Intended use: configure once per agentic session, then hand to an LLM agent
+# for workflows that should post at most N comments on a single known issue.
+#
+#   saran env gh-issue-repo-comment-quota GH_REPO=myorg/myrepo GH_ISSUE=42
+#   saran quotas reset gh-issue-repo-comment-quota
+#
+# Excluded (mutating, not quota-guarded): close, create, delete, develop, edit,
+#   lock, pin, reopen, transfer, unlock, unpin
+#   (also omitted from comment: --body-file, --editor, --web, --delete-last,
+#   --edit-last, --create-if-none, --yes)
+#
+# Included (read-only): list, status, view
+# Included (quota-guarded write): comment
+
+name: gh-issue-repo-comment-quota
+version: "1.0.0"
+help: "Read-only gh issue operations for $GH_REPO, with quota-guarded issue commenting"
+
+requires:
+  - cli: gh
+    version: ">=2.0.0"
+
+vars:
+  - name: GH_TOKEN
+    required: true
+    help: "GitHub auth token — must be set in host environment, not in saran env"
+  - name: GH_REPO
+    required: true
+    help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
+  - name: GH_ISSUE
+    required: true
+    help: "Target issue number or URL — fixed by operator; agent may only comment on this issue"
+  - name: GH_ISSUE_COMMENT_QUOTA
+    default: "1"
+    help: "Maximum number of comments the agent may post on $GH_ISSUE (default: 1)"
+
+quotas:
+  - command: comment
+    limit: $GH_ISSUE_COMMENT_QUOTA
+
+commands:
+  list:
+    help: "List issues in $GH_REPO"
+    actions:
+      - gh: [issue, list, -R, "$GH_REPO"]
+        optional_flags:
+          - name: --state
+            type: enum
+            values: [open, closed, all]
+            help: "Filter by state (default: open)"
+          - name: --assignee
+            type: str
+            help: "Filter by assignee username, or @me"
+          - name: --author
+            type: str
+            help: "Filter by author username"
+          - name: --label
+            type: str
+            repeated: true
+            help: "Filter by label (may be specified multiple times)"
+          - name: --milestone
+            type: str
+            help: "Filter by milestone number or title"
+          - name: --mention
+            type: str
+            help: "Filter by mentioned username"
+          - name: --limit
+            type: int
+            help: "Maximum number of issues to return (default: 30)"
+          - name: --search
+            type: str
+            help: "Search issues with a query string (GitHub issue search syntax)"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. number,title,state,labels)"
+
+  status:
+    help: "Show issues relevant to you in $GH_REPO (assigned, mentioned, opened)"
+    actions:
+      - gh: [issue, status, -R, "$GH_REPO"]
+        optional_flags:
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields"
+
+  view:
+    help: "View an issue in $GH_REPO by number or URL"
+    args:
+      - name: issue
+        var_name: ISSUE_REF
+        type: str
+        required: true
+        help: "Issue number or URL"
+    actions:
+      - gh: [issue, view, "$ISSUE_REF", -R, "$GH_REPO"]
+        optional_flags:
+          - name: --comments
+            type: bool
+            help: "Include issue comments in the output"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. number,title,body,state,labels,comments)"
+
+  comment:
+    help: "Post a comment on $GH_ISSUE in $GH_REPO (quota: $GH_ISSUE_COMMENT_QUOTA)"
+    args:
+      - name: body
+        var_name: COMMENT_BODY
+        type: str
+        required: true
+        help: "The comment body text"
+    actions:
+      - gh:
+          [issue, comment, "$GH_ISSUE", -R, "$GH_REPO", --body, "$COMMENT_BODY"]
