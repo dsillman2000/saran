@@ -1,0 +1,83 @@
+# glab-release.repo.ro
+#
+# A Saran wrapper around `glab release` exposing all read-only subcommands
+# locked to a specific repository. Intended for use by an LLM agent that should
+# only ever inspect releases for one known repository.
+#
+# GLAB_REPO must be set before the wrapper will start — configure it via:
+#   saran env set glab-release.repo.ro GLAB_REPO myorg/myrepo
+#
+# Excluded (mutating): create, delete, upload
+#
+# Included (read-only): list, view, download
+#
+# Note: unlike gh-release.repo.ro, the `tag` positional on `view` and
+# `download` is optional — when omitted, glab targets the latest release.
+# Use `list` first to discover available tags, or omit to act on latest.
+
+name: glab-release.repo.ro
+version: "1.0.0"
+help: "Read-only glab release operations for $GLAB_REPO"
+
+requires:
+  - cli: glab
+    version: ">=1.89.0"
+
+vars:
+  - name: GITLAB_TOKEN
+    required: true
+    help: "GitLab auth token — must be set in host environment, not in saran env"
+  - name: GLAB_REPO
+    required: true
+    help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format (e.g. myorg/myrepo)"
+
+commands:
+  list:
+    help: "List releases in $GLAB_REPO"
+    actions:
+      - glab: [release, list, -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number (default: 1)"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 30)"
+
+  view:
+    help: "View information about a release in $GLAB_REPO (omit tag to view latest)"
+    args:
+      - name: tag
+        var_name: RELEASE_TAG
+        type: str
+        required: false
+        help: "Release tag name (e.g. v1.0.0); omit to view the latest release"
+    actions:
+      - glab: [release, view, "$RELEASE_TAG", -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+
+  download:
+    help: "Download release assets from $GLAB_REPO (omit tag to download from latest)"
+    args:
+      - name: tag
+        var_name: RELEASE_TAG
+        type: str
+        required: false
+        help: "Release tag name (e.g. v1.0.0); omit to download from the latest release"
+    actions:
+      - glab: [release, download, "$RELEASE_TAG", -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --asset-name
+            type: str
+            help: "Download only assets matching this name or glob pattern (e.g. '*.tar.gz')"
+          - name: --dir
+            type: str
+            help: "Directory to download release assets into (default: .)"

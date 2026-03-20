@@ -76,6 +76,39 @@ Examples are organized by the CLI they wrap under `spec/examples/`.
 |---|---|
 | [`spec/examples/gh/gh-search.repo.ro.yaml`](spec/examples/gh/gh-search.repo.ro.yaml) | Repo-scoped read-only wrapper for `gh search` — exposes `issues`, `prs`, `commits`, `code`, all filtered to `GH_REPO` via `--repo` |
 
+### `spec/examples/glab/` — GitLab CLI wrappers
+
+#### `glab mr`
+
+| File | Description |
+|---|---|
+| [`spec/examples/glab/glab-mr.ro.yaml`](spec/examples/glab/glab-mr.ro.yaml) | Read-only wrapper for `glab mr` — exposes `list`, `view`, `diff`, `issues`, `approvers` with no fixed repo scope; `--repo` available per-invocation |
+| [`spec/examples/glab/glab-mr.repo.ro.yaml`](spec/examples/glab/glab-mr.repo.ro.yaml) | Repo-locked variant — requires `GLAB_REPO` to be set via `saran env` |
+| [`spec/examples/glab/glab-mr-note.mr.rw.quota.yaml`](spec/examples/glab/glab-mr-note.mr.rw.quota.yaml) | MR- and repo-locked wrapper with `list`, fixed-MR `view` and `diff`, plus quota-guarded `note`, `resolve`, and `unresolve` — `GLAB_REPO`, `GLAB_MR`, and `GLAB_MR_NOTE_QUOTA` configured via `saran env` |
+
+#### `glab issue`
+
+| File | Description |
+|---|---|
+| [`spec/examples/glab/glab-issue.ro.yaml`](spec/examples/glab/glab-issue.ro.yaml) | Read-only wrapper for `glab issue` — exposes `list`, `view`, `board-view` with no fixed repo scope |
+| [`spec/examples/glab/glab-issue.repo.ro.yaml`](spec/examples/glab/glab-issue.repo.ro.yaml) | Repo-locked variant — requires `GLAB_REPO` to be set via `saran env` |
+| [`spec/examples/glab/glab-issue-create.repo.rw.quota.yaml`](spec/examples/glab/glab-issue-create.repo.rw.quota.yaml) | Repo-locked wrapper with read-only commands plus a quota-guarded `create` — `GLAB_REPO` and `GLAB_ISSUE_CREATE_QUOTA` configured via `saran env` |
+| [`spec/examples/glab/glab-issue-note.issue.rw.quota.yaml`](spec/examples/glab/glab-issue-note.issue.rw.quota.yaml) | Issue- and repo-locked wrapper with `list`, fixed-issue `view`, plus a quota-guarded `note` — `GLAB_REPO`, `GLAB_ISSUE`, and `GLAB_ISSUE_NOTE_QUOTA` configured via `saran env` |
+
+#### `glab ci`
+
+| File | Description |
+|---|---|
+| [`spec/examples/glab/glab-ci.ro.yaml`](spec/examples/glab/glab-ci.ro.yaml) | Read-only wrapper for `glab ci` — exposes `list`, `get`, `status`, `trace`, `artifact` with no fixed repo scope |
+| [`spec/examples/glab/glab-ci.repo.ro.yaml`](spec/examples/glab/glab-ci.repo.ro.yaml) | Repo-locked variant — requires `GLAB_REPO` to be set via `saran env` |
+| [`spec/examples/glab/glab-ci.branch.ro.yaml`](spec/examples/glab/glab-ci.branch.ro.yaml) | Branch-locked variant — fixes both `GLAB_REPO` and `GLAB_BRANCH`; `--branch`/`--ref` removed from optional flags since they are baked in |
+
+#### `glab release`
+
+| File | Description |
+|---|---|
+| [`spec/examples/glab/glab-release.repo.ro.yaml`](spec/examples/glab/glab-release.repo.ro.yaml) | Repo-locked read-only wrapper for `glab release` — exposes `list`, `view`, `download`; tag is optional on all commands (omit to target latest release) |
+
 ### `spec/examples/` — General examples
 
 | File | Description |

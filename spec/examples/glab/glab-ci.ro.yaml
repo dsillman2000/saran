@@ -1,0 +1,177 @@
+# glab-ci.ro
+#
+# A Saran wrapper around `glab ci` exposing read-only subcommands for
+# inspecting CI/CD pipelines and job logs/artifacts with no fixed repository
+# scope. Intended for use by an LLM agent that inspects CI/CD state across
+# multiple repositories. The agent may supply --repo per-invocation to scope
+# each call, or rely on ambient glab context (e.g. current directory clone).
+#
+# Excluded (mutating): cancel, delete, retry, run, run-trig, trigger
+# Excluded (interactive TUI): view  — use `status` or `get` for machine-readable output
+#
+# Included (read-only): list, get, status, trace, artifact
+#
+# See glab-ci.repo.ro.yaml for a variant that locks operations to a specific
+# repository via a required GLAB_REPO variable.
+
+name: glab-ci.ro
+version: "1.0.0"
+help: "Read-only glab CI/CD pipeline and job operations (no fixed repo scope)"
+
+requires:
+  - cli: glab
+    version: ">=1.89.0"
+
+vars:
+  - name: GITLAB_TOKEN
+    required: true
+    help: "GitLab auth token — must be set in host environment, not in saran env"
+
+commands:
+  list:
+    help: "List CI/CD pipelines for a project"
+    actions:
+      - glab: [ci, list]
+        optional_flags:
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format"
+          - name: --status
+            type: enum
+            values:
+              [
+                running,
+                pending,
+                success,
+                failed,
+                canceled,
+                skipped,
+                created,
+                manual,
+                waiting_for_resource,
+                preparing,
+                scheduled,
+              ]
+            help: "Filter by pipeline status"
+          - name: --ref
+            type: str
+            help: "Return only pipelines for this ref (branch or tag)"
+          - name: --scope
+            type: enum
+            values: [running, pending, finished, branches, tags]
+            help: "Return only pipelines with the given scope"
+          - name: --source
+            type: str
+            help: "Filter by trigger source (e.g. push, merge_request_event, pipeline)"
+          - name: --order
+            type: enum
+            values: [id, status, ref, updated_at, user_id]
+            help: "Order pipelines by this field (default: id)"
+          - name: --sort
+            type: enum
+            values: [asc, desc]
+            help: "Sort direction for --order (default: desc)"
+          - name: --username
+            type: str
+            help: "Return only pipelines triggered by this username"
+          - name: --updated-after
+            type: str
+            help: "Return only pipelines updated after this date (ISO 8601, e.g. 2019-03-15T08:00:00Z)"
+          - name: --updated-before
+            type: str
+            help: "Return only pipelines updated before this date (ISO 8601)"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number (default: 1)"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 30)"
+
+  get:
+    help: "Get details of a specific CI/CD pipeline"
+    actions:
+      - glab: [ci, get]
+        optional_flags:
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format"
+          - name: --branch
+            type: str
+            help: "Get the latest pipeline on this branch (default: current branch)"
+          - name: --pipeline-id
+            type: int
+            help: "Get pipeline by ID (takes precedence over --branch)"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --with-job-details
+            type: bool
+            help: "Show extended job information alongside the pipeline"
+
+  status:
+    help: "View a summary of the latest pipeline status for a branch"
+    actions:
+      - glab: [ci, status]
+        optional_flags:
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format"
+          - name: --branch
+            type: str
+            help: "Check pipeline status for this branch (default: current branch)"
+          - name: --compact
+            type: bool
+            help: "Show status in compact format"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (incompatible with --compact)"
+
+  trace:
+    help: "Stream the log of a CI/CD job"
+    args:
+      - name: job
+        var_name: JOB
+        type: str
+        required: false
+        help: "Job ID (numeric) or job name to trace; omit to interactively select"
+    actions:
+      - glab: [ci, trace, "$JOB"]
+        optional_flags:
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format"
+          - name: --branch
+            type: str
+            help: "Branch to search for the job (default: current branch)"
+          - name: --pipeline-id
+            type: int
+            help: "Pipeline ID to search for the job"
+
+  artifact:
+    help: "Download all artifacts from a specific job in the last pipeline for a ref"
+    args:
+      - name: ref
+        var_name: REF
+        type: str
+        required: true
+        help: "Branch or tag to download artifacts from (e.g. main)"
+      - name: job_name
+        var_name: JOB_NAME
+        type: str
+        required: true
+        help: "Name of the job whose artifacts to download (e.g. build)"
+    actions:
+      - glab: [ci, artifact, "$REF", "$JOB_NAME"]
+        optional_flags:
+          - name: --repo
+            type: str
+            help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format"
+          - name: --path
+            type: str
+            help: "Local path to download artifact files to (default: ./)"

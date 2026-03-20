@@ -1,0 +1,166 @@
+# glab-ci.repo.ro
+#
+# A Saran wrapper around `glab ci` exposing read-only subcommands for
+# inspecting CI/CD pipelines and job logs/artifacts, locked to a specific
+# repository. Intended for use by an LLM agent that should only ever observe
+# CI/CD state for one known repository.
+#
+# GLAB_REPO must be set before the wrapper will start — configure it via:
+#   saran env set glab-ci.repo.ro GLAB_REPO myorg/myrepo
+#
+# Excluded (mutating): cancel, delete, retry, run, run-trig, trigger
+# Excluded (interactive TUI): view  — use `status` or `get` for machine-readable output
+#
+# Included (read-only): list, get, status, trace, artifact
+#
+# See glab-ci.ro.yaml for a variant with no fixed repository scope.
+
+name: glab-ci.repo.ro
+version: "1.0.0"
+help: "Read-only glab CI/CD pipeline and job operations for $GLAB_REPO"
+
+requires:
+  - cli: glab
+    version: ">=1.89.0"
+
+vars:
+  - name: GITLAB_TOKEN
+    required: true
+    help: "GitLab auth token — must be set in host environment, not in saran env"
+  - name: GLAB_REPO
+    required: true
+    help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format (e.g. myorg/myrepo)"
+
+commands:
+  list:
+    help: "List CI/CD pipelines in $GLAB_REPO"
+    actions:
+      - glab: [ci, list, -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --status
+            type: enum
+            values:
+              [
+                running,
+                pending,
+                success,
+                failed,
+                canceled,
+                skipped,
+                created,
+                manual,
+                waiting_for_resource,
+                preparing,
+                scheduled,
+              ]
+            help: "Filter by pipeline status"
+          - name: --ref
+            type: str
+            help: "Return only pipelines for this ref (branch or tag)"
+          - name: --scope
+            type: enum
+            values: [running, pending, finished, branches, tags]
+            help: "Return only pipelines with the given scope"
+          - name: --source
+            type: str
+            help: "Filter by trigger source (e.g. push, merge_request_event, pipeline)"
+          - name: --order
+            type: enum
+            values: [id, status, ref, updated_at, user_id]
+            help: "Order pipelines by this field (default: id)"
+          - name: --sort
+            type: enum
+            values: [asc, desc]
+            help: "Sort direction for --order (default: desc)"
+          - name: --username
+            type: str
+            help: "Return only pipelines triggered by this username"
+          - name: --updated-after
+            type: str
+            help: "Return only pipelines updated after this date (ISO 8601, e.g. 2019-03-15T08:00:00Z)"
+          - name: --updated-before
+            type: str
+            help: "Return only pipelines updated before this date (ISO 8601)"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number (default: 1)"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 30)"
+
+  get:
+    help: "Get details of a specific CI/CD pipeline in $GLAB_REPO"
+    actions:
+      - glab: [ci, get, -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --branch
+            type: str
+            help: "Get the latest pipeline on this branch (default: current branch)"
+          - name: --pipeline-id
+            type: int
+            help: "Get pipeline by ID (takes precedence over --branch)"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --with-job-details
+            type: bool
+            help: "Show extended job information alongside the pipeline"
+
+  status:
+    help: "View a summary of the latest pipeline status for a branch in $GLAB_REPO"
+    actions:
+      - glab: [ci, status, -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --branch
+            type: str
+            help: "Check pipeline status for this branch (default: current branch)"
+          - name: --compact
+            type: bool
+            help: "Show status in compact format"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (incompatible with --compact)"
+
+  trace:
+    help: "Stream the log of a CI/CD job in $GLAB_REPO"
+    args:
+      - name: job
+        var_name: JOB
+        type: str
+        required: false
+        help: "Job ID (numeric) or job name to trace; omit to interactively select"
+    actions:
+      - glab: [ci, trace, "$JOB", -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --branch
+            type: str
+            help: "Branch to search for the job (default: current branch)"
+          - name: --pipeline-id
+            type: int
+            help: "Pipeline ID to search for the job"
+
+  artifact:
+    help: "Download all artifacts from a specific job in the last pipeline for a ref in $GLAB_REPO"
+    args:
+      - name: ref
+        var_name: REF
+        type: str
+        required: true
+        help: "Branch or tag to download artifacts from (e.g. main)"
+      - name: job_name
+        var_name: JOB_NAME
+        type: str
+        required: true
+        help: "Name of the job whose artifacts to download (e.g. build)"
+    actions:
+      - glab: [ci, artifact, "$REF", "$JOB_NAME", -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --path
+            type: str
+            help: "Local path to download artifact files to (default: ./)"

@@ -1,0 +1,177 @@
+# glab-issue-create.repo.rw.quota
+#
+# A Saran wrapper around `glab issue` providing read-only inspection of issues
+# in a fixed repository, plus a quota-guarded `create` command. The target
+# repository is locked via GLAB_REPO. The number of issues the agent may create
+# is bounded by GLAB_ISSUE_CREATE_QUOTA (default: 1).
+#
+# Intended use: configure once per agentic session, then hand to an LLM agent
+# for workflows that should file exactly N issues (e.g. bug triage, automated
+# reporting).
+#
+#   saran env set glab-issue-create.repo.rw.quota GLAB_REPO myorg/myrepo
+#   saran quotas reset glab-issue-create.repo.rw.quota
+#
+# Excluded (mutating, not quota-guarded): close, delete, note, reopen,
+#   subscribe, unsubscribe, update, board create
+#   (also omitted from create: --no-editor, --recover, --web, --yes,
+#   --time-spent, --time-estimate — these are workflow/admin fields)
+#
+# Included (read-only): list, view
+# Included (quota-guarded write): create
+
+name: glab-issue-create.repo.rw.quota
+version: "1.0.0"
+help: "Read-only glab issue operations for $GLAB_REPO, with quota-guarded issue creation"
+
+requires:
+  - cli: glab
+    version: ">=1.89.0"
+
+vars:
+  - name: GITLAB_TOKEN
+    required: true
+    help: "GitLab auth token — must be set in host environment, not in saran env"
+  - name: GLAB_REPO
+    required: true
+    help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format (e.g. myorg/myrepo)"
+  - name: GLAB_ISSUE_CREATE_QUOTA
+    default: "1"
+    help: "Maximum number of issues the agent may create in $GLAB_REPO (default: 1)"
+
+quotas:
+  - command: create
+    limit: $GLAB_ISSUE_CREATE_QUOTA
+
+commands:
+  list:
+    help: "List issues in $GLAB_REPO"
+    actions:
+      - glab: [issue, list, -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --all
+            type: bool
+            help: "Get all issues regardless of state"
+          - name: --assignee
+            type: str
+            help: "Filter by assignee username"
+          - name: --author
+            type: str
+            help: "Filter by author username"
+          - name: --closed
+            type: bool
+            help: "Get only closed issues"
+          - name: --confidential
+            type: bool
+            help: "Filter by confidential issues"
+          - name: --label
+            type: str
+            repeated: true
+            help: "Filter by label (may be specified multiple times, or comma-separated)"
+          - name: --milestone
+            type: str
+            help: "Filter by milestone ID"
+          - name: --search
+            type: str
+            help: "Search string (searched in title and description)"
+          - name: --order
+            type: enum
+            values:
+              [
+                created_at,
+                updated_at,
+                priority,
+                due_date,
+                relative_position,
+                label_priority,
+                milestone_due,
+                popularity,
+                weight,
+              ]
+            help: "Order issues by field (default: created_at)"
+          - name: --sort
+            type: enum
+            values: [asc, desc]
+            help: "Sort direction for --order (default: desc)"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number (default: 1)"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 30)"
+
+  view:
+    help: "View an issue in $GLAB_REPO by ID or URL"
+    args:
+      - name: issue
+        var_name: ISSUE_REF
+        type: str
+        required: true
+        help: "Issue ID or URL"
+    actions:
+      - glab: [issue, view, "$ISSUE_REF", -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --comments
+            type: bool
+            help: "Show issue comments and activities"
+          - name: --system-logs
+            type: bool
+            help: "Show system activities and logs"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number for paginated comment output (default: 1)"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 20)"
+
+  create:
+    help: "Create an issue in $GLAB_REPO (quota: $GLAB_ISSUE_CREATE_QUOTA)"
+    args:
+      - name: title
+        var_name: ISSUE_TITLE
+        type: str
+        required: true
+        help: "Issue title"
+    actions:
+      - glab: [issue, create, -R, "$GLAB_REPO", --title, "$ISSUE_TITLE"]
+        optional_flags:
+          - name: --description
+            type: str
+            help: "Issue description body text"
+          - name: --assignee
+            type: str
+            repeated: true
+            help: "Assign to usernames (may be specified multiple times, or comma-separated)"
+          - name: --label
+            type: str
+            repeated: true
+            help: "Add label by name (may be specified multiple times, or comma-separated)"
+          - name: --milestone
+            type: str
+            help: "Milestone global ID or title to assign"
+          - name: --confidential
+            type: bool
+            help: "Set the issue as confidential"
+          - name: --due-date
+            type: str
+            help: "Due date in YYYY-MM-DD format"
+          - name: --weight
+            type: int
+            help: "Issue weight (must be >= 0)"
+          - name: --epic
+            type: int
+            help: "ID of the epic to add this issue to"
+          - name: --linked-issues
+            type: str
+            help: "IIDs of issues this issue links to (comma-separated or repeated flag)"
+          - name: --linked-mr
+            type: int
+            help: "IID of a merge request in which to resolve all issues"

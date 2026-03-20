@@ -95,15 +95,9 @@ commands:
             help: "Output JSON with the specified comma-separated fields"
 
   view:
-    help: "View an issue in $GH_REPO by number or URL"
-    args:
-      - name: issue
-        var_name: ISSUE_REF
-        type: str
-        required: true
-        help: "Issue number or URL"
+    help: "View issue $GH_ISSUE in $GH_REPO"
     actions:
-      - gh: [issue, view, "$ISSUE_REF", -R, "$GH_REPO"]
+      - gh: [issue, view, "$GH_ISSUE", -R, "$GH_REPO"]
         optional_flags:
           - name: --comments
             type: bool

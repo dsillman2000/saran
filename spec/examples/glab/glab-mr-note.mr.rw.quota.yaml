@@ -1,0 +1,232 @@
+# glab-mr-note.mr.rw.quota
+#
+# A Saran wrapper around `glab mr` providing read-only inspection of merge
+# requests in a fixed repository, plus quota-guarded note, resolve, and
+# unresolve commands scoped to a single fixed merge request. Both the target
+# repository (GLAB_REPO) and target MR (GLAB_MR) are locked in vars by the
+# operator — the agent cannot post notes on any other MR.
+#
+# This mirrors glab-issue-note.issue.rw.quota: the operator pins a single
+# resource (repo + MR) and the quota (GLAB_MR_NOTE_QUOTA) bounds how many times
+# the agent may write to that MR.
+#
+# Intended use: configure once per agentic session, then hand to an LLM agent
+# for code review workflows that should produce at most N notes on a single
+# known merge request.
+#
+#   saran env set glab-mr-note.mr.rw.quota GLAB_REPO myorg/myrepo
+#   saran env set glab-mr-note.mr.rw.quota GLAB_MR 42
+#   saran quotas reset glab-mr-note.mr.rw.quota
+#
+# Excluded (mutating, not quota-guarded): approve, close, create, delete,
+#   merge, rebase, reopen, revoke, subscribe, todo, unsubscribe, update
+#
+# Included (read-only): list, view, diff
+# Included (quota-guarded write): note, resolve, unresolve
+#
+# Note: `view` and `diff` are fixed to $GLAB_MR — the agent cannot inspect an
+# arbitrary MR. Use glab-mr.repo.ro.yaml if free-form MR browsing is needed.
+
+name: glab-mr-note.mr.rw.quota
+version: "1.0.0"
+help: "Read-only glab mr operations for $GLAB_REPO, with quota-guarded note posting on MR $GLAB_MR"
+
+requires:
+  - cli: glab
+    version: ">=1.89.0"
+
+vars:
+  - name: GITLAB_TOKEN
+    required: true
+    help: "GitLab auth token — must be set in host environment, not in saran env"
+  - name: GLAB_REPO
+    required: true
+    help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format (e.g. myorg/myrepo)"
+  - name: GLAB_MR
+    required: true
+    help: "Target merge request ID — fixed by operator; agent may only post notes on this MR"
+  - name: GLAB_MR_NOTE_QUOTA
+    default: "1"
+    help: "Maximum number of write operations (note, resolve, unresolve) the agent may perform on MR $GLAB_MR (default: 1)"
+
+quotas:
+  - command: note
+    limit: $GLAB_MR_NOTE_QUOTA
+  - command: resolve
+    limit: $GLAB_MR_NOTE_QUOTA
+  - command: unresolve
+    limit: $GLAB_MR_NOTE_QUOTA
+
+commands:
+  list:
+    help: "List merge requests in $GLAB_REPO"
+    actions:
+      - glab: [mr, list, -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --all
+            type: bool
+            help: "Get all merge requests regardless of state"
+          - name: --assignee
+            type: str
+            repeated: true
+            help: "Filter by assigned user (may be specified multiple times, or comma-separated)"
+          - name: --author
+            type: str
+            help: "Filter by author username"
+          - name: --closed
+            type: bool
+            help: "Get only closed merge requests"
+          - name: --merged
+            type: bool
+            help: "Get only merged merge requests"
+          - name: --draft
+            type: bool
+            help: "Filter to draft merge requests only"
+          - name: --not-draft
+            type: bool
+            help: "Filter to non-draft merge requests only"
+          - name: --label
+            type: str
+            repeated: true
+            help: "Filter by label (may be specified multiple times, or comma-separated)"
+          - name: --not-label
+            type: str
+            help: "Exclude MRs with label (comma-separated)"
+          - name: --milestone
+            type: str
+            help: "Filter by milestone ID"
+          - name: --reviewer
+            type: str
+            repeated: true
+            help: "Filter by reviewer username (may be specified multiple times, or comma-separated)"
+          - name: --search
+            type: str
+            help: "Filter by string in title and description"
+          - name: --source-branch
+            type: str
+            help: "Filter by source branch name"
+          - name: --target-branch
+            type: str
+            help: "Filter by target branch name"
+          - name: --environment
+            type: str
+            help: "Filter by deployment environment name"
+          - name: --created-after
+            type: str
+            help: "Filter MRs created after this date (ISO 8601)"
+          - name: --created-before
+            type: str
+            help: "Filter MRs created before this date (ISO 8601)"
+          - name: --deployed-after
+            type: str
+            help: "Filter MRs deployed after this date (ISO 8601)"
+          - name: --deployed-before
+            type: str
+            help: "Filter MRs deployed before this date (ISO 8601)"
+          - name: --order
+            type: enum
+            values:
+              [
+                created_at,
+                updated_at,
+                merged_at,
+                title,
+                priority,
+                label_priority,
+                milestone_due,
+                popularity,
+              ]
+            help: "Order merge requests by field"
+          - name: --sort
+            type: enum
+            values: [asc, desc]
+            help: "Sort direction for --order (default: desc)"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number (default: 1)"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 30)"
+
+  view:
+    help: "View MR $GLAB_MR in $GLAB_REPO"
+    actions:
+      - glab: [mr, view, "$GLAB_MR", -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --comments
+            type: bool
+            help: "Show merge request comments and activities"
+          - name: --resolved
+            type: bool
+            help: "Show only resolved discussions (implies --comments)"
+          - name: --unresolved
+            type: bool
+            help: "Show only unresolved discussions (implies --comments)"
+          - name: --system-logs
+            type: bool
+            help: "Show system activities and logs"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number for paginated comment output"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 20)"
+
+  diff:
+    help: "View changes in MR $GLAB_MR in $GLAB_REPO"
+    actions:
+      - glab: [mr, diff, "$GLAB_MR", -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --color
+            type: enum
+            values: [always, never, auto]
+            help: "Use color in diff output (default: auto)"
+          - name: --raw
+            type: bool
+            help: "Use raw diff format suitable for piping"
+
+  note:
+    help: "Post a note (comment) on MR $GLAB_MR in $GLAB_REPO (quota: $GLAB_MR_NOTE_QUOTA)"
+    args:
+      - name: message
+        var_name: NOTE_MESSAGE
+        type: str
+        required: true
+        help: "The note body text"
+    actions:
+      - glab:
+          [mr, note, "$GLAB_MR", --message, "$NOTE_MESSAGE", -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --unique
+            type: bool
+            help: "Don't create a note if an identical one already exists"
+
+  resolve:
+    help: "Resolve the discussion containing a note ID on MR $GLAB_MR in $GLAB_REPO (quota: $GLAB_MR_NOTE_QUOTA)"
+    args:
+      - name: note-id
+        var_name: NOTE_ID
+        type: str
+        required: true
+        help: "The note ID whose parent discussion should be resolved"
+    actions:
+      - glab: [mr, note, "$GLAB_MR", --resolve, "$NOTE_ID", -R, "$GLAB_REPO"]
+
+  unresolve:
+    help: "Unresolve the discussion containing a note ID on MR $GLAB_MR in $GLAB_REPO (quota: $GLAB_MR_NOTE_QUOTA)"
+    args:
+      - name: note-id
+        var_name: NOTE_ID
+        type: str
+        required: true
+        help: "The note ID whose parent discussion should be unresolved"
+    actions:
+      - glab: [mr, note, "$GLAB_MR", --unresolve, "$NOTE_ID", -R, "$GLAB_REPO"]

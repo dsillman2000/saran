@@ -1,0 +1,153 @@
+# glab-issue-note.issue.rw.quota
+#
+# A Saran wrapper around `glab issue` providing read-only inspection of issues
+# in a fixed repository, plus a quota-guarded `note` command scoped to a single
+# fixed issue. Both the target repository (GLAB_REPO) and target issue
+# (GLAB_ISSUE) are locked in vars by the operator — the agent cannot post a
+# note on any other issue.
+#
+# This mirrors gh-issue-comment.issue.rw.quota exactly: the operator pins a
+# single resource (repo + issue) and the quota (GLAB_ISSUE_NOTE_QUOTA) bounds
+# how many times the agent may comment on that issue.
+#
+# Intended use: configure once per agentic session, then hand to an LLM agent
+# for workflows that should post at most N notes on a single known issue.
+#
+#   saran env set glab-issue-note.issue.rw.quota GLAB_REPO myorg/myrepo
+#   saran env set glab-issue-note.issue.rw.quota GLAB_ISSUE 42
+#   saran quotas reset glab-issue-note.issue.rw.quota
+#
+# Excluded (mutating, not quota-guarded): close, create, delete, reopen,
+#   subscribe, unsubscribe, update, board create
+#
+# Included (read-only): list, view
+# Included (quota-guarded write): note
+#
+# Note: `view` is fixed to $GLAB_ISSUE — the agent cannot inspect an arbitrary
+# issue. Use glab-issue.repo.ro.yaml if free-form issue browsing is needed.
+
+name: glab-issue-note.issue.rw.quota
+version: "1.0.0"
+help: "Read-only glab issue operations for $GLAB_REPO, with quota-guarded note posting on issue $GLAB_ISSUE"
+
+requires:
+  - cli: glab
+    version: ">=1.89.0"
+
+vars:
+  - name: GITLAB_TOKEN
+    required: true
+    help: "GitLab auth token — must be set in host environment, not in saran env"
+  - name: GLAB_REPO
+    required: true
+    help: "Target repository in OWNER/REPO or GROUP/NAMESPACE/REPO format (e.g. myorg/myrepo)"
+  - name: GLAB_ISSUE
+    required: true
+    help: "Target issue ID — fixed by operator; agent may only post notes on this issue"
+  - name: GLAB_ISSUE_NOTE_QUOTA
+    default: "1"
+    help: "Maximum number of notes the agent may post on issue $GLAB_ISSUE (default: 1)"
+
+quotas:
+  - command: note
+    limit: $GLAB_ISSUE_NOTE_QUOTA
+
+commands:
+  list:
+    help: "List issues in $GLAB_REPO"
+    actions:
+      - glab: [issue, list, -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --all
+            type: bool
+            help: "Get all issues regardless of state"
+          - name: --assignee
+            type: str
+            help: "Filter by assignee username"
+          - name: --author
+            type: str
+            help: "Filter by author username"
+          - name: --closed
+            type: bool
+            help: "Get only closed issues"
+          - name: --label
+            type: str
+            repeated: true
+            help: "Filter by label (may be specified multiple times, or comma-separated)"
+          - name: --milestone
+            type: str
+            help: "Filter by milestone ID"
+          - name: --search
+            type: str
+            help: "Search string (searched in title and description)"
+          - name: --order
+            type: enum
+            values:
+              [
+                created_at,
+                updated_at,
+                priority,
+                due_date,
+                relative_position,
+                label_priority,
+                milestone_due,
+                popularity,
+                weight,
+              ]
+            help: "Order issues by field (default: created_at)"
+          - name: --sort
+            type: enum
+            values: [asc, desc]
+            help: "Sort direction for --order (default: desc)"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number (default: 1)"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 30)"
+
+  view:
+    help: "View issue $GLAB_ISSUE in $GLAB_REPO"
+    actions:
+      - glab: [issue, view, "$GLAB_ISSUE", -R, "$GLAB_REPO"]
+        optional_flags:
+          - name: --comments
+            type: bool
+            help: "Show issue comments and activities"
+          - name: --system-logs
+            type: bool
+            help: "Show system activities and logs"
+          - name: --output
+            type: enum
+            values: [text, json]
+            help: "Format output as text or json (default: text)"
+          - name: --page
+            type: int
+            help: "Page number for paginated comment output (default: 1)"
+          - name: --per-page
+            type: int
+            help: "Number of items per page (default: 20)"
+
+  note:
+    help: "Post a note (comment) on issue $GLAB_ISSUE in $GLAB_REPO (quota: $GLAB_ISSUE_NOTE_QUOTA)"
+    args:
+      - name: message
+        var_name: NOTE_MESSAGE
+        type: str
+        required: true
+        help: "The note body text"
+    actions:
+      - glab:
+          [
+            issue,
+            note,
+            "$GLAB_ISSUE",
+            --message,
+            "$NOTE_MESSAGE",
+            -R,
+            "$GLAB_REPO",
+          ]
