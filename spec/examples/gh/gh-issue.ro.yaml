@@ -1,22 +1,21 @@
-# gh-issue-repo-ro
+# gh-issue.ro
 #
-# A Saran wrapper around `gh issue` exposing all read-only subcommands locked
-# to a specific repository. Intended for use by an LLM agent that should only
-# ever inspect issues for one known repository.
-#
-# GH_REPO must be set before the wrapper will start — configure it via:
-#   saran env set gh-issue-repo-ro GH_REPO myorg/myrepo
+# A Saran wrapper around `gh issue` exposing all read-only subcommands with no
+# fixed repository scope. Intended for use by an LLM agent inspecting issues
+# across any repository. The caller's ambient GH context determines which
+# repository is targeted.
 #
 # Excluded (mutating): create, close, comment, delete, develop, edit, lock,
 #                      pin, reopen, transfer, unlock, unpin
 #
 # Included (read-only): list, status, view
 #
-# See gh-issue-ro.yaml for a variant with no fixed repository scope.
+# See gh-issue.repo.ro.yaml for a variant that locks operations to a specific
+# repository via a required GH_REPO variable.
 
-name: gh-issue-repo-ro
+name: gh-issue.ro
 version: "1.0.0"
-help: "Read-only gh issue operations for $GH_REPO"
+help: "Read-only gh issue operations (no fixed repo scope)"
 
 requires:
   - cli: gh
@@ -26,15 +25,12 @@ vars:
   - name: GH_TOKEN
     required: true
     help: "GitHub auth token — must be set in host environment, not in saran env"
-  - name: GH_REPO
-    required: true
-    help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
 
 commands:
   list:
-    help: "List issues in $GH_REPO"
+    help: "List issues"
     actions:
-      - gh: [issue, list, -R, "$GH_REPO"]
+      - gh: [issue, list]
         optional_flags:
           - name: --state
             type: enum
@@ -67,16 +63,16 @@ commands:
             help: "Output JSON with the specified comma-separated fields (e.g. number,title,state,labels)"
 
   status:
-    help: "Show issues relevant to you in $GH_REPO (assigned, mentioned, opened)"
+    help: "Show issues relevant to you (assigned, mentioned, opened)"
     actions:
-      - gh: [issue, status, -R, "$GH_REPO"]
+      - gh: [issue, status]
         optional_flags:
           - name: --json
             type: str
             help: "Output JSON with the specified comma-separated fields"
 
   view:
-    help: "View an issue in $GH_REPO by number or URL"
+    help: "View an issue by number or URL"
     args:
       - name: issue
         var_name: ISSUE_REF
@@ -84,7 +80,7 @@ commands:
         required: true
         help: "Issue number or URL"
     actions:
-      - gh: [issue, view, "$ISSUE_REF", -R, "$GH_REPO"]
+      - gh: [issue, view, "$ISSUE_REF"]
         optional_flags:
           - name: --comments
             type: bool

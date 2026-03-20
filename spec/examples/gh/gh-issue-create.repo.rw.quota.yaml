@@ -1,4 +1,4 @@
-# gh-issue-repo-create-quota
+# gh-issue-create.repo.rw.quota
 #
 # A Saran wrapper around `gh issue` providing read-only inspection of issues in
 # a fixed repository, plus a quota-guarded `create` command. The target
@@ -9,8 +9,8 @@
 # for workflows that should file exactly N issues (e.g. bug triage, automated
 # reporting).
 #
-#   saran env gh-issue-repo-create-quota GH_REPO=myorg/myrepo
-#   saran quotas reset gh-issue-repo-create-quota
+#   saran env gh-issue-create.repo.rw.quota GH_REPO=myorg/myrepo
+#   saran quotas reset gh-issue-create.repo.rw.quota
 #
 # Excluded (mutating, not quota-guarded): close, comment, delete, develop,
 #   edit, lock, pin, reopen, transfer, unlock, unpin
@@ -19,7 +19,7 @@
 # Included (read-only): list, status, view
 # Included (quota-guarded write): create
 
-name: gh-issue-repo-create-quota
+name: gh-issue-create.repo.rw.quota
 version: "1.0.0"
 help: "Read-only gh issue operations for $GH_REPO, with quota-guarded issue creation"
 

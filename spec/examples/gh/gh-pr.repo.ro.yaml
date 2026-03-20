@@ -1,27 +1,22 @@
-# gh-pr-repo-comment-quota
+# gh-pr.repo.ro
 #
-# A Saran wrapper around `gh pr` providing read-only inspection of pull requests
-# in a fixed repository, plus a quota-guarded `comment` command. The target
-# repository and PR are locked via GH_REPO and GH_PR. The number of comments the
-# agent may post is bounded by GH_PR_COMMENT_QUOTA (default: 1).
+# A Saran wrapper around `gh pr` exposing all read-only subcommands locked to a
+# specific repository. Intended for use by an LLM agent that should only ever
+# inspect pull requests for one known repository.
 #
-# Intended use: configure once per agentic session, then hand to an LLM agent
-# for code review workflows that should produce exactly N comments.
+# GH_REPO must be set before the wrapper will start — configure it via:
+#   saran env set gh-pr.repo.ro GH_REPO myorg/myrepo
 #
-#   saran env gh-pr-repo-comment-quota GH_REPO=myorg/myrepo
-#   saran env gh-pr-repo-comment-quota GH_PR=99
-#   saran quotas reset gh-pr-repo-comment-quota
+# Excluded (mutating): create, close, comment, edit, lock, merge, ready,
+#                      reopen, revert, review, unlock, update-branch
 #
-# Excluded (mutating, not quota-guarded): create, close, edit, lock, merge,
-#   ready, reopen, revert, review, unlock, update-branch
-#   (also omitted from comment: --delete-last, --edit-last, --editor, --web)
+# Included (read-only): list, status, checkout, checks, diff, view
 #
-# Included (read-only): list, status, view, diff, checks, checkout
-# Included (quota-guarded write): comment
+# See gh-pr.ro.yaml for a variant with no fixed repository scope.
 
-name: gh-pr-repo-comment-quota
+name: gh-pr.repo.ro
 version: "1.0.0"
-help: "Read-only gh pr operations for $GH_REPO, with quota-guarded commenting on PR $GH_PR"
+help: "Read-only gh pr operations for $GH_REPO"
 
 requires:
   - cli: gh
@@ -34,16 +29,6 @@ vars:
   - name: GH_REPO
     required: true
     help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
-  - name: GH_PR
-    required: true
-    help: "Target pull request number (e.g. 99)"
-  - name: GH_PR_COMMENT_QUOTA
-    default: "1"
-    help: "Maximum number of comments the agent may post on PR $GH_PR (default: 1)"
-
-quotas:
-  - command: comment
-    limit: $GH_PR_COMMENT_QUOTA
 
 commands:
   list:
@@ -97,9 +82,15 @@ commands:
             help: "Output JSON with the specified comma-separated fields"
 
   view:
-    help: "View PR $GH_PR in $GH_REPO"
+    help: "View a pull request in $GH_REPO by number, URL, or branch name"
+    args:
+      - name: pr
+        var_name: PR_REF
+        type: str
+        required: true
+        help: "Pull request number, URL, or head branch name"
     actions:
-      - gh: [pr, view, "$GH_PR", -R, "$GH_REPO"]
+      - gh: [pr, view, "$PR_REF", -R, "$GH_REPO"]
         optional_flags:
           - name: --comments
             type: bool
@@ -109,9 +100,15 @@ commands:
             help: "Output JSON with the specified comma-separated fields (e.g. number,title,body,state,reviews)"
 
   diff:
-    help: "View the diff for PR $GH_PR in $GH_REPO"
+    help: "View the diff for a pull request in $GH_REPO"
+    args:
+      - name: pr
+        var_name: PR_REF
+        type: str
+        required: true
+        help: "Pull request number, URL, or head branch name"
     actions:
-      - gh: [pr, diff, "$GH_PR", -R, "$GH_REPO"]
+      - gh: [pr, diff, "$PR_REF", -R, "$GH_REPO"]
         optional_flags:
           - name: --patch
             type: bool
@@ -125,9 +122,15 @@ commands:
             help: "Use color in diff output (default: auto)"
 
   checks:
-    help: "Show CI check statuses for PR $GH_PR in $GH_REPO"
+    help: "Show CI check statuses for a pull request in $GH_REPO"
+    args:
+      - name: pr
+        var_name: PR_REF
+        type: str
+        required: true
+        help: "Pull request number, URL, or head branch name"
     actions:
-      - gh: [pr, checks, "$GH_PR", -R, "$GH_REPO"]
+      - gh: [pr, checks, "$PR_REF", -R, "$GH_REPO"]
         optional_flags:
           - name: --watch
             type: bool
@@ -146,9 +149,15 @@ commands:
             help: "Output JSON with the specified comma-separated fields (e.g. name,state,bucket)"
 
   checkout:
-    help: "Check out PR $GH_PR from $GH_REPO locally"
+    help: "Check out a pull request branch from $GH_REPO locally"
+    args:
+      - name: pr
+        var_name: PR_REF
+        type: str
+        required: true
+        help: "Pull request number, URL, or head branch name"
     actions:
-      - gh: [pr, checkout, "$GH_PR", -R, "$GH_REPO"]
+      - gh: [pr, checkout, "$PR_REF", -R, "$GH_REPO"]
         optional_flags:
           - name: --branch
             type: str
@@ -162,14 +171,3 @@ commands:
           - name: --recurse-submodules
             type: bool
             help: "Update all submodules after checkout"
-
-  comment:
-    help: "Post a comment on PR $GH_PR in $GH_REPO (quota: $GH_PR_COMMENT_QUOTA)"
-    args:
-      - name: body
-        var_name: COMMENT_BODY
-        type: str
-        required: true
-        help: "The comment body text"
-    actions:
-      - gh: [pr, comment, "$GH_PR", -R, "$GH_REPO", --body, "$COMMENT_BODY"]

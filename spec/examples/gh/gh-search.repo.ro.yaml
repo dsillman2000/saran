@@ -1,17 +1,17 @@
-# gh-search-repo
+# gh-search.repo.ro
 #
 # A Saran wrapper around `gh search` scoped to a fixed repository.
 # All search operations are automatically filtered to GH_REPO via --repo.
 # Intended for use by an LLM agent searching within a single known repository.
 #
 # Configure the target repository via:
-#   saran env set gh-search-repo GH_REPO owner/repo
+#   saran env set gh-search.repo.ro GH_REPO owner/repo
 #
 # Omitted: repos (not meaningful when scoped to a single repository)
 #
 # Included: issues, prs, commits, code
 
-name: gh-search-repo
+name: gh-search.repo.ro
 version: "1.0.0"
 help: "gh search operations scoped to $GH_REPO"
 

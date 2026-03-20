@@ -1,11 +1,11 @@
-# gh-release-repo-ro
+# gh-release.repo.ro
 #
 # A Saran wrapper around `gh release` exposing all read-only subcommands locked
 # to a specific repository. Intended for use by an LLM agent that should only
 # ever inspect releases for one known repository.
 #
 # GH_REPO must be set before the wrapper will start — configure it via:
-#   saran env set gh-release-repo-ro GH_REPO myorg/myrepo
+#   saran env set gh-release.repo.ro GH_REPO myorg/myrepo
 #
 # Excluded (mutating): create, delete, delete-asset, edit, upload
 # Excluded (not wrapped): verify, verify-asset
@@ -15,7 +15,7 @@
 # Note: `view` and `download` require an explicit tag name. Use `list` first to
 # discover available tags, then pass the tag to `view` or `download`.
 
-name: gh-release-repo-ro
+name: gh-release.repo.ro
 version: "1.0.0"
 help: "Read-only gh release operations for $GH_REPO"
 

@@ -1,22 +1,22 @@
-# gh-pr-repo-ro
+# gh-pr.ro
 #
-# A Saran wrapper around `gh pr` exposing all read-only subcommands locked to a
-# specific repository. Intended for use by an LLM agent that should only ever
-# inspect pull requests for one known repository.
-#
-# GH_REPO must be set before the wrapper will start — configure it via:
-#   saran env set gh-pr-repo-ro GH_REPO myorg/myrepo
+# A Saran wrapper around `gh pr` exposing all read-only subcommands with no
+# fixed repository scope. Intended for use by an LLM agent inspecting pull
+# requests across any repository. The caller's ambient GH context (e.g. a
+# cloned repo directory or a GH_REPO env var set outside saran) determines
+# which repository is targeted.
 #
 # Excluded (mutating): create, close, comment, edit, lock, merge, ready,
 #                      reopen, revert, review, unlock, update-branch
 #
 # Included (read-only): list, status, checkout, checks, diff, view
 #
-# See gh-pr-ro.yaml for a variant with no fixed repository scope.
+# See gh-pr.repo.ro.yaml for a variant that locks operations to a specific
+# repository via a required GH_REPO variable.
 
-name: gh-pr-repo-ro
+name: gh-pr.ro
 version: "1.0.0"
-help: "Read-only gh pr operations for $GH_REPO"
+help: "Read-only gh pr operations (no fixed repo scope)"
 
 requires:
   - cli: gh
@@ -26,15 +26,12 @@ vars:
   - name: GH_TOKEN
     required: true
     help: "GitHub auth token — must be set in host environment, not in saran env"
-  - name: GH_REPO
-    required: true
-    help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
 
 commands:
   list:
-    help: "List pull requests in $GH_REPO"
+    help: "List pull requests"
     actions:
-      - gh: [pr, list, -R, "$GH_REPO"]
+      - gh: [pr, list]
         optional_flags:
           - name: --state
             type: enum
@@ -70,9 +67,9 @@ commands:
             help: "Output JSON with the specified comma-separated fields (e.g. number,title,state,author)"
 
   status:
-    help: "Show status of pull requests relevant to you in $GH_REPO"
+    help: "Show status of pull requests relevant to you"
     actions:
-      - gh: [pr, status, -R, "$GH_REPO"]
+      - gh: [pr, status]
         optional_flags:
           - name: --conflict-status
             type: bool
@@ -82,7 +79,7 @@ commands:
             help: "Output JSON with the specified comma-separated fields"
 
   view:
-    help: "View a pull request in $GH_REPO by number, URL, or branch name"
+    help: "View a pull request by number, URL, or branch name"
     args:
       - name: pr
         var_name: PR_REF
@@ -90,7 +87,7 @@ commands:
         required: true
         help: "Pull request number, URL, or head branch name"
     actions:
-      - gh: [pr, view, "$PR_REF", -R, "$GH_REPO"]
+      - gh: [pr, view, "$PR_REF"]
         optional_flags:
           - name: --comments
             type: bool
@@ -100,7 +97,7 @@ commands:
             help: "Output JSON with the specified comma-separated fields (e.g. number,title,body,state,reviews)"
 
   diff:
-    help: "View the diff for a pull request in $GH_REPO"
+    help: "View the diff for a pull request"
     args:
       - name: pr
         var_name: PR_REF
@@ -108,7 +105,7 @@ commands:
         required: true
         help: "Pull request number, URL, or head branch name"
     actions:
-      - gh: [pr, diff, "$PR_REF", -R, "$GH_REPO"]
+      - gh: [pr, diff, "$PR_REF"]
         optional_flags:
           - name: --patch
             type: bool
@@ -122,7 +119,7 @@ commands:
             help: "Use color in diff output (default: auto)"
 
   checks:
-    help: "Show CI check statuses for a pull request in $GH_REPO"
+    help: "Show CI check statuses for a pull request"
     args:
       - name: pr
         var_name: PR_REF
@@ -130,7 +127,7 @@ commands:
         required: true
         help: "Pull request number, URL, or head branch name"
     actions:
-      - gh: [pr, checks, "$PR_REF", -R, "$GH_REPO"]
+      - gh: [pr, checks, "$PR_REF"]
         optional_flags:
           - name: --watch
             type: bool
@@ -149,7 +146,7 @@ commands:
             help: "Output JSON with the specified comma-separated fields (e.g. name,state,bucket)"
 
   checkout:
-    help: "Check out a pull request branch from $GH_REPO locally"
+    help: "Check out a pull request branch locally"
     args:
       - name: pr
         var_name: PR_REF
@@ -157,7 +154,7 @@ commands:
         required: true
         help: "Pull request number, URL, or head branch name"
     actions:
-      - gh: [pr, checkout, "$PR_REF", -R, "$GH_REPO"]
+      - gh: [pr, checkout, "$PR_REF"]
         optional_flags:
           - name: --branch
             type: str

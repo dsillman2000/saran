@@ -1,19 +1,19 @@
-# gh-issue-repo-comment-quota
+# gh-issue-comment.issue.rw.quota
 #
 # A Saran wrapper around `gh issue` providing read-only inspection of issues in
 # a fixed repository, plus a quota-guarded `comment` command. Both the target
 # repository (GH_REPO) and the target issue (GH_ISSUE) are locked in vars by
 # the operator — the agent cannot comment on any other issue.
 #
-# This mirrors gh-pr-repo-comment-quota exactly: the operator pins a single
+# This mirrors gh-pr-comment.pr.rw.quota exactly: the operator pins a single
 # resource (repo + issue) and the quota (GH_ISSUE_COMMENT_QUOTA) bounds how
 # many times the agent may comment on that issue.
 #
 # Intended use: configure once per agentic session, then hand to an LLM agent
 # for workflows that should post at most N comments on a single known issue.
 #
-#   saran env gh-issue-repo-comment-quota GH_REPO=myorg/myrepo GH_ISSUE=42
-#   saran quotas reset gh-issue-repo-comment-quota
+#   saran env gh-issue-comment.issue.rw.quota GH_REPO=myorg/myrepo GH_ISSUE=42
+#   saran quotas reset gh-issue-comment.issue.rw.quota
 #
 # Excluded (mutating, not quota-guarded): close, create, delete, develop, edit,
 #   lock, pin, reopen, transfer, unlock, unpin
@@ -23,7 +23,7 @@
 # Included (read-only): list, status, view
 # Included (quota-guarded write): comment
 
-name: gh-issue-repo-comment-quota
+name: gh-issue-comment.issue.rw.quota
 version: "1.0.0"
 help: "Read-only gh issue operations for $GH_REPO, with quota-guarded issue commenting"
 
