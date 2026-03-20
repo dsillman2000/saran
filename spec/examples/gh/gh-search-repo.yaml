@@ -1,0 +1,383 @@
+# gh-search-repo
+#
+# A Saran wrapper around `gh search` scoped to a fixed repository.
+# All search operations are automatically filtered to GH_REPO via --repo.
+# Intended for use by an LLM agent searching within a single known repository.
+#
+# Configure the target repository via:
+#   saran env set gh-search-repo GH_REPO owner/repo
+#
+# Omitted: repos (not meaningful when scoped to a single repository)
+#
+# Included: issues, prs, commits, code
+
+name: gh-search-repo
+version: "1.0.0"
+help: "gh search operations scoped to $GH_REPO"
+
+requires:
+  - cli: gh
+    version: ">=2.0.0"
+
+vars:
+  - name: GH_TOKEN
+    required: true
+    help: "GitHub auth token — must be set in host environment, not in saran env"
+  - name: GH_REPO
+    required: true
+    help: "Target repository in OWNER/REPO format (e.g. encode/httpx)"
+
+commands:
+  issues:
+    help: "Search issues in $GH_REPO"
+    args:
+      - name: query
+        var_name: QUERY
+        type: str
+        required: true
+        help: "Search query string (GitHub issue search syntax)"
+    actions:
+      - gh: [search, issues, "$QUERY", --repo, "$GH_REPO"]
+        optional_flags:
+          - name: --app
+            type: str
+            help: "Filter by GitHub App author"
+          - name: --archived
+            type: enum
+            values: ["true", "false"]
+            help: "Filter based on repository archived state"
+          - name: --assignee
+            type: str
+            help: "Filter by assignee username"
+          - name: --author
+            type: str
+            help: "Filter by author username"
+          - name: --closed
+            type: str
+            help: "Filter by closed-at date (e.g. >2023-01-01)"
+          - name: --commenter
+            type: str
+            help: "Filter by commenting user"
+          - name: --comments
+            type: int
+            help: "Filter by number of comments"
+          - name: --created
+            type: str
+            help: "Filter by created-at date (e.g. >2023-01-01)"
+          - name: --include-prs
+            type: bool
+            help: "Include pull requests in results"
+          - name: --interactions
+            type: int
+            help: "Filter by number of reactions and comments"
+          - name: --involves
+            type: str
+            help: "Filter by involved user (author, assignee, commenter, or mentioned)"
+          - name: --jq
+            type: str
+            help: "Filter JSON output using a jq expression"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. number,title,state,labels)"
+          - name: --label
+            type: str
+            repeated: true
+            help: "Filter by label (may be specified multiple times)"
+          - name: --language
+            type: str
+            help: "Filter by coding language"
+          - name: --limit
+            type: int
+            help: "Maximum number of results to return (default: 30)"
+          - name: --locked
+            type: bool
+            help: "Filter to locked conversations only"
+          - name: --match
+            type: enum
+            values: [title, body, comments]
+            repeated: true
+            help: "Restrict search to specific issue field (may be specified multiple times)"
+          - name: --mentions
+            type: str
+            help: "Filter by mentioned user"
+          - name: --milestone
+            type: str
+            help: "Filter by milestone title"
+          - name: --no-assignee
+            type: bool
+            help: "Filter to issues with no assignee"
+          - name: --no-label
+            type: bool
+            help: "Filter to issues with no label"
+          - name: --no-milestone
+            type: bool
+            help: "Filter to issues with no milestone"
+          - name: --no-project
+            type: bool
+            help: "Filter to issues with no project"
+          - name: --order
+            type: enum
+            values: [asc, desc]
+            help: "Sort order, only used with --sort (default: desc)"
+          - name: --project
+            type: str
+            help: "Filter by project board in owner/number format"
+          - name: --reactions
+            type: int
+            help: "Filter by number of reactions"
+          - name: --sort
+            type: str
+            help: "Sort results: {comments|created|interactions|reactions|reactions-+1|reactions--1|reactions-heart|reactions-smile|reactions-tada|reactions-thinking_face|updated} (default: best-match)"
+          - name: --state
+            type: enum
+            values: [open, closed]
+            help: "Filter by state"
+          - name: --team-mentions
+            type: str
+            help: "Filter by team mention"
+          - name: --template
+            type: str
+            help: "Format JSON output using a Go template"
+          - name: --updated
+            type: str
+            help: "Filter by last-updated date (e.g. >2023-01-01)"
+          - name: --web
+            type: bool
+            help: "Open the search query in the web browser"
+
+  prs:
+    help: "Search pull requests in $GH_REPO"
+    args:
+      - name: query
+        var_name: QUERY
+        type: str
+        required: true
+        help: "Search query string (GitHub pull request search syntax)"
+    actions:
+      - gh: [search, prs, "$QUERY", --repo, "$GH_REPO"]
+        optional_flags:
+          - name: --app
+            type: str
+            help: "Filter by GitHub App author"
+          - name: --archived
+            type: enum
+            values: ["true", "false"]
+            help: "Filter based on repository archived state"
+          - name: --assignee
+            type: str
+            help: "Filter by assignee username"
+          - name: --author
+            type: str
+            help: "Filter by author username"
+          - name: --base
+            type: str
+            help: "Filter by base branch name"
+          - name: --checks
+            type: enum
+            values: [pending, success, failure]
+            help: "Filter by CI check status"
+          - name: --closed
+            type: str
+            help: "Filter by closed-at date (e.g. >2023-01-01)"
+          - name: --commenter
+            type: str
+            help: "Filter by commenting user"
+          - name: --comments
+            type: int
+            help: "Filter by number of comments"
+          - name: --created
+            type: str
+            help: "Filter by created-at date (e.g. >2023-01-01)"
+          - name: --draft
+            type: bool
+            help: "Filter to draft pull requests only"
+          - name: --head
+            type: str
+            help: "Filter by head branch name"
+          - name: --interactions
+            type: int
+            help: "Filter by number of reactions and comments"
+          - name: --involves
+            type: str
+            help: "Filter by involved user (author, assignee, commenter, or mentioned)"
+          - name: --jq
+            type: str
+            help: "Filter JSON output using a jq expression"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. number,title,state,author)"
+          - name: --label
+            type: str
+            repeated: true
+            help: "Filter by label (may be specified multiple times)"
+          - name: --language
+            type: str
+            help: "Filter by coding language"
+          - name: --limit
+            type: int
+            help: "Maximum number of results to return (default: 30)"
+          - name: --locked
+            type: bool
+            help: "Filter to locked conversations only"
+          - name: --match
+            type: enum
+            values: [title, body, comments]
+            repeated: true
+            help: "Restrict search to specific PR field (may be specified multiple times)"
+          - name: --mentions
+            type: str
+            help: "Filter by mentioned user"
+          - name: --merged
+            type: bool
+            help: "Filter to merged pull requests only"
+          - name: --merged-at
+            type: str
+            help: "Filter by merged-at date (e.g. >2023-01-01)"
+          - name: --milestone
+            type: str
+            help: "Filter by milestone title"
+          - name: --no-assignee
+            type: bool
+            help: "Filter to pull requests with no assignee"
+          - name: --no-label
+            type: bool
+            help: "Filter to pull requests with no label"
+          - name: --no-milestone
+            type: bool
+            help: "Filter to pull requests with no milestone"
+          - name: --no-project
+            type: bool
+            help: "Filter to pull requests with no project"
+          - name: --order
+            type: enum
+            values: [asc, desc]
+            help: "Sort order, only used with --sort (default: desc)"
+          - name: --project
+            type: str
+            help: "Filter by project board in owner/number format"
+          - name: --reactions
+            type: int
+            help: "Filter by number of reactions"
+          - name: --review
+            type: enum
+            values: [none, required, approved, changes_requested]
+            help: "Filter by review status"
+          - name: --review-requested
+            type: str
+            help: "Filter by user or team requested to review"
+          - name: --reviewed-by
+            type: str
+            help: "Filter by reviewing user"
+          - name: --sort
+            type: str
+            help: "Sort results: {comments|reactions|reactions-+1|reactions--1|reactions-smile|reactions-thinking_face|reactions-heart|reactions-tada|interactions|created|updated} (default: best-match)"
+          - name: --state
+            type: enum
+            values: [open, closed]
+            help: "Filter by state"
+          - name: --team-mentions
+            type: str
+            help: "Filter by team mention"
+          - name: --template
+            type: str
+            help: "Format JSON output using a Go template"
+          - name: --updated
+            type: str
+            help: "Filter by last-updated date (e.g. >2023-01-01)"
+          - name: --web
+            type: bool
+            help: "Open the search query in the web browser"
+
+  commits:
+    help: "Search commits in $GH_REPO"
+    args:
+      - name: query
+        var_name: QUERY
+        type: str
+        required: true
+        help: "Search query string (GitHub commit search syntax)"
+    actions:
+      - gh: [search, commits, "$QUERY", --repo, "$GH_REPO"]
+        optional_flags:
+          - name: --author
+            type: str
+            help: "Filter by committing GitHub username"
+          - name: --author-name
+            type: str
+            help: "Filter by author display name in the commit"
+          - name: --author-email
+            type: str
+            help: "Filter by author email address in the commit"
+          - name: --author-date
+            type: str
+            help: "Filter by author date"
+          - name: --committer
+            type: str
+            help: "Filter by committing GitHub username"
+          - name: --committer-date
+            type: str
+            help: "Filter by committer date"
+          - name: --committer-name
+            type: str
+            help: "Filter by committer display name in the commit"
+          - name: --committer-email
+            type: str
+            help: "Filter by committer email address in the commit"
+          - name: --hash
+            type: str
+            help: "Filter by exact commit hash"
+          - name: --parent
+            type: str
+            help: "Filter by parent commit hash"
+          - name: --merge
+            type: bool
+            help: "Filter to merge commits only"
+          - name: --limit
+            type: int
+            help: "Maximum number of results to return (default: 30)"
+          - name: --sort
+            type: enum
+            values: [author-date, committer-date]
+            help: "Sort results by this field (default: best-match)"
+          - name: --order
+            type: enum
+            values: [asc, desc]
+            help: "Sort order (default: desc)"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. sha,author,committer,message)"
+
+  code:
+    help: "Search code in $GH_REPO"
+    args:
+      - name: query
+        var_name: QUERY
+        type: str
+        required: true
+        help: "Search query string (GitHub code search syntax)"
+    actions:
+      - gh: [search, code, "$QUERY", --repo, "$GH_REPO"]
+        optional_flags:
+          - name: --extension
+            type: str
+            help: "Filter by file extension (without leading dot, e.g. py)"
+          - name: --filename
+            type: str
+            help: "Filter by exact filename"
+          - name: --language
+            type: str
+            help: "Filter by programming language name"
+          - name: --limit
+            type: int
+            help: "Maximum number of results to return (default: 30)"
+          - name: --match
+            type: enum
+            values: [file, path]
+            repeated: true
+            help: "Restrict search to file contents or file path: {file|path}"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. path,repository,textMatches)"
+          - name: --size
+            type: str
+            help: "Filter on size range, in kilobytes"

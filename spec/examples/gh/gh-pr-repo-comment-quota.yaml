@@ -1,0 +1,175 @@
+# gh-pr-repo-comment-quota
+#
+# A Saran wrapper around `gh pr` providing read-only inspection of pull requests
+# in a fixed repository, plus a quota-guarded `comment` command. The target
+# repository and PR are locked via GH_REPO and GH_PR. The number of comments the
+# agent may post is bounded by GH_PR_COMMENT_QUOTA (default: 1).
+#
+# Intended use: configure once per agentic session, then hand to an LLM agent
+# for code review workflows that should produce exactly N comments.
+#
+#   saran env gh-pr-repo-comment-quota GH_REPO=myorg/myrepo
+#   saran env gh-pr-repo-comment-quota GH_PR=99
+#   saran quotas reset gh-pr-repo-comment-quota
+#
+# Excluded (mutating, not quota-guarded): create, close, edit, lock, merge,
+#   ready, reopen, revert, review, unlock, update-branch
+#   (also omitted from comment: --delete-last, --edit-last, --editor, --web)
+#
+# Included (read-only): list, status, view, diff, checks, checkout
+# Included (quota-guarded write): comment
+
+name: gh-pr-repo-comment-quota
+version: "1.0.0"
+help: "Read-only gh pr operations for $GH_REPO, with quota-guarded commenting on PR $GH_PR"
+
+requires:
+  - cli: gh
+    version: ">=2.0.0"
+
+vars:
+  - name: GH_TOKEN
+    required: true
+    help: "GitHub auth token — must be set in host environment, not in saran env"
+  - name: GH_REPO
+    required: true
+    help: "Target repository in OWNER/REPO format (e.g. myorg/myrepo)"
+  - name: GH_PR
+    required: true
+    help: "Target pull request number (e.g. 99)"
+  - name: GH_PR_COMMENT_QUOTA
+    default: "1"
+    help: "Maximum number of comments the agent may post on PR $GH_PR (default: 1)"
+
+quotas:
+  - command: comment
+    limit: $GH_PR_COMMENT_QUOTA
+
+commands:
+  list:
+    help: "List pull requests in $GH_REPO"
+    actions:
+      - gh: [pr, list, -R, "$GH_REPO"]
+        optional_flags:
+          - name: --state
+            type: enum
+            values: [open, closed, merged, all]
+            help: "Filter by state (default: open)"
+          - name: --assignee
+            type: str
+            help: "Filter by assignee username"
+          - name: --author
+            type: str
+            help: "Filter by author username"
+          - name: --base
+            type: str
+            help: "Filter by base branch name"
+          - name: --head
+            type: str
+            help: "Filter by head branch name"
+          - name: --label
+            type: str
+            repeated: true
+            help: "Filter by label (may be specified multiple times)"
+          - name: --limit
+            type: int
+            help: "Maximum number of PRs to return (default: 30)"
+          - name: --search
+            type: str
+            help: "Search pull requests with a query string (GitHub search syntax)"
+          - name: --draft
+            type: bool
+            help: "Filter to draft pull requests only"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. number,title,state,author)"
+
+  status:
+    help: "Show status of pull requests relevant to you in $GH_REPO"
+    actions:
+      - gh: [pr, status, -R, "$GH_REPO"]
+        optional_flags:
+          - name: --conflict-status
+            type: bool
+            help: "Display the merge conflict status of each pull request"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields"
+
+  view:
+    help: "View PR $GH_PR in $GH_REPO"
+    actions:
+      - gh: [pr, view, "$GH_PR", -R, "$GH_REPO"]
+        optional_flags:
+          - name: --comments
+            type: bool
+            help: "Include pull request comments in the output"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. number,title,body,state,reviews)"
+
+  diff:
+    help: "View the diff for PR $GH_PR in $GH_REPO"
+    actions:
+      - gh: [pr, diff, "$GH_PR", -R, "$GH_REPO"]
+        optional_flags:
+          - name: --patch
+            type: bool
+            help: "Display diff in patch format"
+          - name: --name-only
+            type: bool
+            help: "Display only names of changed files"
+          - name: --color
+            type: enum
+            values: [always, never, auto]
+            help: "Use color in diff output (default: auto)"
+
+  checks:
+    help: "Show CI check statuses for PR $GH_PR in $GH_REPO"
+    actions:
+      - gh: [pr, checks, "$GH_PR", -R, "$GH_REPO"]
+        optional_flags:
+          - name: --watch
+            type: bool
+            help: "Watch checks until they all complete"
+          - name: --fail-fast
+            type: bool
+            help: "Exit watch mode on first check failure"
+          - name: --required
+            type: bool
+            help: "Only show checks that are required"
+          - name: --interval
+            type: int
+            help: "Refresh interval in seconds during watch mode (default: 10)"
+          - name: --json
+            type: str
+            help: "Output JSON with the specified comma-separated fields (e.g. name,state,bucket)"
+
+  checkout:
+    help: "Check out PR $GH_PR from $GH_REPO locally"
+    actions:
+      - gh: [pr, checkout, "$GH_PR", -R, "$GH_REPO"]
+        optional_flags:
+          - name: --branch
+            type: str
+            help: "Local branch name to use (default: the PR head branch name)"
+          - name: --detach
+            type: bool
+            help: "Checkout with a detached HEAD"
+          - name: --force
+            type: bool
+            help: "Reset the existing local branch to the latest state of the pull request"
+          - name: --recurse-submodules
+            type: bool
+            help: "Update all submodules after checkout"
+
+  comment:
+    help: "Post a comment on PR $GH_PR in $GH_REPO (quota: $GH_PR_COMMENT_QUOTA)"
+    args:
+      - name: body
+        var_name: COMMENT_BODY
+        type: str
+        required: true
+        help: "The comment body text"
+    actions:
+      - gh: [pr, comment, "$GH_PR", -R, "$GH_REPO", --body, "$COMMENT_BODY"]

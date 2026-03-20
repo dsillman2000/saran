@@ -27,20 +27,51 @@ agent, preventing it from taking destructive actions while still giving it the a
 
 | Document | Description |
 |---|---|
-| [`spec/saran-format.md`](spec/saran-format.md) | YAML wrapper format — the complete schema reference for authoring wrapper files |
-| [`spec/saran-cli.md`](spec/saran-cli.md) | `saran` CLI reference — `install`, `remove`, `list`, `validate`, and the multicall model |
+| [`spec/saran-format.md`](spec/saran-format.md) | YAML wrapper format — the complete schema reference for authoring wrapper files, including `vars`, `quotas`, and `commands` |
+| [`spec/saran-cli.md`](spec/saran-cli.md) | `saran` CLI reference — `install`, `remove`, `list`, `validate`, `quotas`, and the multicall model |
 | [`spec/saran-env.md`](spec/saran-env.md) | `saran env` reference — variable resolution, `env.yaml` format, and security guidance |
 
 ---
 
 ## Examples
 
+Examples are organized by the CLI they wrap under `spec/examples/`.
+
+### `spec/examples/gh/` — GitHub CLI wrappers
+
+#### `gh pr`
+
 | File | Description |
 |---|---|
-| [`spec/examples/gh-pr-ro.yaml`](spec/examples/gh-pr-ro.yaml) | Read-only wrapper for `gh pr` — exposes `list`, `status`, `view`, `diff`, `checks`, `checkout` with no fixed repo scope |
-| [`spec/examples/gh-pr-repo-ro.yaml`](spec/examples/gh-pr-repo-ro.yaml) | Repo-locked variant of `gh-pr-ro` — requires `GH_REPO` to be set via `saran env` |
-| [`spec/examples/gh-issue-ro.yaml`](spec/examples/gh-issue-ro.yaml) | Read-only wrapper for `gh issue` — exposes `list`, `status`, `view` with no fixed repo scope |
-| [`spec/examples/gh-issue-repo-ro.yaml`](spec/examples/gh-issue-repo-ro.yaml) | Repo-locked variant of `gh-issue-ro` — requires `GH_REPO` to be set via `saran env` |
+| [`spec/examples/gh/gh-pr-ro.yaml`](spec/examples/gh/gh-pr-ro.yaml) | Read-only wrapper for `gh pr` — exposes `list`, `status`, `view`, `diff`, `checks`, `checkout` with no fixed repo scope |
+| [`spec/examples/gh/gh-pr-repo-ro.yaml`](spec/examples/gh/gh-pr-repo-ro.yaml) | Repo-locked variant of `gh-pr-ro` — requires `GH_REPO` to be set via `saran env` |
+| [`spec/examples/gh/gh-pr-repo-comment-quota.yaml`](spec/examples/gh/gh-pr-repo-comment-quota.yaml) | Repo- and PR-locked wrapper with read-only commands plus a quota-guarded `comment` — `GH_REPO`, `GH_PR`, and `GH_PR_COMMENT_QUOTA` configured via `saran env` |
+
+#### `gh issue`
+
+| File | Description |
+|---|---|
+| [`spec/examples/gh/gh-issue-ro.yaml`](spec/examples/gh/gh-issue-ro.yaml) | Read-only wrapper for `gh issue` — exposes `list`, `status`, `view` with no fixed repo scope |
+| [`spec/examples/gh/gh-issue-repo-ro.yaml`](spec/examples/gh/gh-issue-repo-ro.yaml) | Repo-locked variant of `gh-issue-ro` — requires `GH_REPO` to be set via `saran env` |
+| [`spec/examples/gh/gh-issue-repo-create-quota.yaml`](spec/examples/gh/gh-issue-repo-create-quota.yaml) | Repo-locked wrapper with read-only commands plus a quota-guarded `create` — `GH_REPO` and `GH_ISSUE_CREATE_QUOTA` configured via `saran env` |
+
+#### `gh run`
+
+| File | Description |
+|---|---|
+| [`spec/examples/gh/gh-run-ro.yaml`](spec/examples/gh/gh-run-ro.yaml) | Read-only wrapper for `gh run` — exposes `list`, `view`, `watch`, `download` with no fixed repo scope |
+| [`spec/examples/gh/gh-run-repo-ro.yaml`](spec/examples/gh/gh-run-repo-ro.yaml) | Repo-locked variant of `gh-run-ro` — requires `GH_REPO` to be set via `saran env` |
+
+#### `gh search`
+
+| File | Description |
+|---|---|
+| [`spec/examples/gh/gh-search-repo.yaml`](spec/examples/gh/gh-search-repo.yaml) | Repo-scoped wrapper for `gh search` — exposes `issues`, `prs`, `commits`, `code`, all filtered to `GH_REPO` via `--repo` |
+
+### `spec/examples/` — General examples
+
+| File | Description |
+|---|---|
 | [`spec/examples/greet.yaml`](spec/examples/greet.yaml) | Minimal wrapper demonstrating positional arguments |
 
 ---
