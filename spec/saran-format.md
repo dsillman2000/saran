@@ -222,6 +222,7 @@ Values from `vars:` and caller-supplied positional arguments (declared in `args:
 - A literal `$` that does not start a recognized `$VAR_NAME` pattern (e.g. a trailing `$` or `$1`) is a validation error — there is no escape syntax. Values that need a literal dollar sign must be placed in `vars:` with a literal default and referenced by name.
 - `${VAR_NAME}` brace syntax is **not** supported in v1; use plain `$VAR_NAME` only.
 - `vars:` names and `args` `var_name` values share one namespace — they must be unique within a command. A collision is a validation error.
+- Because `$VAR_NAME` uses greedy matching, variable names must not be prefixes of other variable names within the same namespace. For example, `VAR` and `VAR_SUFFIX` would cause ambiguous parsing of `$VAR_SUFFIX`. This is a validation error.
 
 > **Resolution timing:** `$VAR_NAME` in action argument arrays resolves against already-resolved `vars:` values (computed at startup) and caller-supplied `args` values (available at invocation). There is no re-resolution against the host environment at invocation time.
 
@@ -466,6 +467,7 @@ Saran must reject a malformed wrapper file with a descriptive error. The followi
 - A `vars:` entry has neither `required: true` nor a `default:` (ambiguous optionality — one must be specified)
 - Two or more `vars:` entries share the same `name`
 - A `vars:` `name` does not satisfy `[A-Za-z_][A-Za-z0-9_]*`
+- A variable name is a prefix of another variable name within the same namespace (e.g., `VAR` and `VAR_SUFFIX` or `VAR` and `VARsuffix`), as this would cause ambiguous parsing in `$VAR_NAME` substitution
 - A `$VAR_NAME` reference in an `actions` entry's argument array resolves to neither a `vars:` name nor an `args` `var_name`
 - A `$VAR_NAME` pattern in an `actions` entry's argument array uses invalid syntax (e.g. a bare trailing `$`, or `$` followed by a digit)
 - A `$VAR_NAME` reference in any `help:` string resolves to a name not declared in top-level `vars:`
@@ -475,6 +477,7 @@ Saran must reject a malformed wrapper file with a descriptive error. The followi
 - An `args` `var_name` conflicts with a `vars:` name or another `args` `var_name` in the same command
 - An `args` `name` contains characters outside `[a-z0-9-]`
 - Two or more `args` entries within the same command share the same `name` or `var_name`
+- An `args` `var_name` is a prefix of another `args` `var_name` within the same command, as this would cause ambiguous parsing in `$VAR_NAME` substitution
 - A required `args` entry appears after an optional one in the same command
 - A `required: true` `vars:` entry has no value in any resolution layer at startup (runtime error, not a parse error)
 
@@ -520,6 +523,12 @@ commands:
 ```
 
 > **Note:** There is intentionally no "optional scoping" model — a var with no `required:` and no `default:` is a validation error. Scope is either fixed (required) or absent (not declared). This keeps the wrapper's contract unambiguous.
+
+### Variable naming for `$VAR_NAME` substitution
+
+Because `$VAR_NAME` uses greedy matching on identifier characters, avoid creating variable names where one is a prefix of another. For example, `VAR` and `VAR_SUFFIX` would cause `$VAR_SUFFIX` to always parse as the longer variable `VAR_SUFFIX`, never as `VAR` followed by literal `_SUFFIX`. Saran validates this and rejects such configurations.
+
+If you need to combine a variable value with literal text, use a space or other separator: `$VAR suffix` or declare a separate variable containing the combined value.
 
 ---
 

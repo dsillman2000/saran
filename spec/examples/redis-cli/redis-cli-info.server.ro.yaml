@@ -1,0 +1,53 @@
+# redis-cli-info.server.ro
+#
+# A Saran wrapper around `redis-cli` exposing a small set of read-only server
+# inspection commands against a fixed Redis server/database. Intended as a
+# simple baseline example for Saran's integration tests.
+#
+# Excluded: arbitrary Redis commands, key reads, writes, and special modes such
+#           as --pipe, --eval, MONITOR, and SUBSCRIBE.
+#
+# Included (read-only): ping, info-server, info-memory, dbsize
+
+name: redis-cli-info.server.ro
+version: "1.0.0"
+help: "Read-only redis-cli server inspection commands for $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
+
+requires:
+  - cli: redis-cli
+    version: ">=6.0.0"
+
+vars:
+  - name: REDISCLI_AUTH
+    required: true
+    help: "Redis password for $REDIS_HOST:$REDIS_PORT — must be set in host environment, not in saran env"
+  - name: REDIS_HOST
+    default: 127.0.0.1
+    help: "Target Redis hostname"
+  - name: REDIS_PORT
+    default: "6379"
+    help: "Target Redis TCP port"
+  - name: REDIS_DB
+    default: "0"
+    help: "Target Redis database number"
+
+commands:
+  ping:
+    help: "Ping Redis at $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
+    actions:
+      - redis-cli: [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", PING]
+
+  info-server:
+    help: "Show INFO server for $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
+    actions:
+      - redis-cli: [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", INFO, server]
+
+  info-memory:
+    help: "Show INFO memory for $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
+    actions:
+      - redis-cli: [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", INFO, memory]
+
+  dbsize:
+    help: "Show DBSIZE for $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
+    actions:
+      - redis-cli: [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", DBSIZE]

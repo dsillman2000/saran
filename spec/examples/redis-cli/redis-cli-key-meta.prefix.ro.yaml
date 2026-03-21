@@ -1,0 +1,77 @@
+# redis-cli-key-meta.prefix.ro
+#
+# A Saran wrapper around `redis-cli` exposing read-only key metadata commands
+# restricted to a fixed key prefix. Intended to illustrate operator-controlled
+# scope and argument substitution in a flat upstream CLI.
+#
+# The caller may only inspect keys under REDIS_KEY_PREFIX. Full keys are formed
+# as REDIS_KEY_PREFIX + caller-supplied suffix.
+#
+# Excluded: arbitrary SCAN patterns, value reads (GET/HGETALL/etc.), and all
+#           mutating Redis commands.
+#
+# Included (read-only): scan, type, ttl, exists
+
+name: redis-cli-key-meta.prefix.ro
+version: "1.0.0"
+help: "Read-only redis-cli key metadata commands for keys under $REDIS_KEY_PREFIX*"
+
+requires:
+  - cli: redis-cli
+    version: ">=6.0.0"
+
+vars:
+  - name: REDISCLI_AUTH
+    required: true
+    help: "Redis password for $REDIS_HOST:$REDIS_PORT — must be set in host environment, not in saran env"
+  - name: REDIS_HOST
+    default: 127.0.0.1
+    help: "Target Redis hostname"
+  - name: REDIS_PORT
+    default: "6379"
+    help: "Target Redis TCP port"
+  - name: REDIS_DB
+    default: "0"
+    help: "Target Redis database number"
+  - name: REDIS_KEY_PREFIX
+    default: "fixture:"
+    help: "Only keys beginning with this prefix may be inspected"
+
+commands:
+  scan:
+    help: "Scan keys under $REDIS_KEY_PREFIX*"
+    actions:
+      - redis-cli: [--scan, --pattern, "$REDIS_KEY_PREFIX*", -h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB"]
+
+  type:
+    help: "Show TYPE for a key under $REDIS_KEY_PREFIX*"
+    args:
+      - name: key-suffix
+        var_name: KEY_SUFFIX
+        type: str
+        required: true
+        help: "Suffix appended to $REDIS_KEY_PREFIX to form the full key"
+    actions:
+      - redis-cli: [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", TYPE, "$REDIS_KEY_PREFIX$KEY_SUFFIX"]
+
+  ttl:
+    help: "Show TTL for a key under $REDIS_KEY_PREFIX*"
+    args:
+      - name: key-suffix
+        var_name: KEY_SUFFIX
+        type: str
+        required: true
+        help: "Suffix appended to $REDIS_KEY_PREFIX to form the full key"
+    actions:
+      - redis-cli: [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", TTL, "$REDIS_KEY_PREFIX$KEY_SUFFIX"]
+
+  exists:
+    help: "Check whether a key exists under $REDIS_KEY_PREFIX*"
+    args:
+      - name: key-suffix
+        var_name: KEY_SUFFIX
+        type: str
+        required: true
+        help: "Suffix appended to $REDIS_KEY_PREFIX to form the full key"
+    actions:
+      - redis-cli: [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", EXISTS, "$REDIS_KEY_PREFIX$KEY_SUFFIX"]

@@ -109,6 +109,14 @@ Examples are organized by the CLI they wrap under `spec/examples/`.
 |---|---|
 | [`spec/examples/glab/glab-release.repo.ro.yaml`](spec/examples/glab/glab-release.repo.ro.yaml) | Repo-locked read-only wrapper for `glab release` — exposes `list`, `view`, `download`; tag is optional on all commands (omit to target latest release) |
 
+### `spec/examples/redis-cli/` — Redis CLI wrappers
+
+| File | Description |
+|---|---|
+| [`spec/examples/redis-cli/redis-cli-info.server.ro.yaml`](spec/examples/redis-cli/redis-cli-info.server.ro.yaml) | Server-scoped read-only wrapper for `redis-cli` — exposes `ping`, `info-server`, `info-memory`, and `dbsize` against a fixed host/port/db |
+| [`spec/examples/redis-cli/redis-cli-key-meta.prefix.ro.yaml`](spec/examples/redis-cli/redis-cli-key-meta.prefix.ro.yaml) | Prefix-scoped read-only wrapper for `redis-cli` — exposes `scan`, `type`, `ttl`, and `exists` only for keys under `REDIS_KEY_PREFIX` |
+| [`spec/examples/redis-cli/redis-cli-string-set.key.rw.quota.yaml`](spec/examples/redis-cli/redis-cli-string-set.key.rw.quota.yaml) | Key-scoped wrapper for `redis-cli` with fixed-key `get` plus quota-guarded `set` — configured via `REDIS_KEY` and `REDIS_SET_QUOTA` |
+
 ### `spec/examples/` — General examples
 
 | File | Description |

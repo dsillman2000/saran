@@ -15,6 +15,10 @@ Detailed unit test plans are in [`unit/`](./unit/):
 
 See [`unit/DEPENDENCIES.md`](./unit/DEPENDENCIES.md) for dependency analysis and [`unit/IMPLEMENTATION.md`](./unit/IMPLEMENTATION.md) for the 3-week implementation plan.
 
+## Integration Tests
+
+Integration tests verify wrapper behavior with real external tools in isolated containers. See [`integration/`](./integration/) for Redis CLI-based integration tests using testcontainers.
+
 ## Approach
 
 - **Tests first** — Define expected behavior through concrete test cases before implementation
