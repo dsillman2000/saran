@@ -2,33 +2,40 @@
 
 ## Overview
 
-The `saran` binary is both a wrapper executor and a management tool. When invoked directly as `saran`, it provides subcommands for installing, removing, and configuring wrappers. When invoked via a symlink (the multicall pattern), it executes the corresponding wrapper.
+The `saran` binary is a wrapper generator and management tool. When invoked directly as `saran`, it provides subcommands for installing, removing, listing, and validating wrappers. When you install a wrapper from a YAML file, Saran compiles a standalone CLI binary that can be invoked directly by name — no routing or YAML parsing at runtime.
 
 > **See also:** [`saran-format.md`](saran-format.md) for the wrapper YAML format, [`saran-env.md`](saran-env.md) for the `saran env` command.
 
 ---
 
-## Multicall Execution Model
+## Binary Generation Model
 
-Saran uses the **multicall binary** pattern for zero-overhead wrapper invocation. When `saran install` registers a wrapper, it creates a symlink in `~/.local/share/saran/bin/` pointing back to the `saran` binary. When invoked via that symlink, `saran` reads `argv[0]` (the name it was called as), looks up the corresponding wrapper at `~/.local/share/saran/wrappers/<name>.yaml`, and executes it.
+Saran uses a **code generation** model: each installed wrapper is a standalone CLI binary compiled from its YAML definition. When `saran install` registers a wrapper, it:
+
+1. Parses and validates the YAML
+2. Generates Rust source code for a `clap`-based CLI
+3. Compiles it via `cargo build`
+4. Places the resulting binary in `~/.local/share/saran/bin/`
+
+This means every wrapper is a true executable with native `--help`, completions, and fast startup — no YAML parsing or routing logic at runtime.
 
 ```
 ~/.local/share/saran/
-  bin/
-    gh-pr-ro      →  /usr/local/bin/saran   (symlink)
-    gh-issue-ro   →  /usr/local/bin/saran   (symlink)
-  wrappers/
+  bin/                 # Compiled wrapper binaries (add to PATH)
+    gh-pr-ro           # Actual executable
+    gh-issue-ro        # Actual executable
+  wrappers/            # Source YAML (for regeneration/inspection)
     gh-pr-ro.yaml
     gh-issue-ro.yaml
-  env.yaml
+  env.yaml             # Runtime variable configuration
 ```
-
-This means one `saran` binary serves all installed wrappers, with no per-wrapper compilation required.
 
 > **PATH setup:** Add `~/.local/share/saran/bin` to your shell `PATH` to make installed wrappers directly invocable by name:
 > ```bash
 > export PATH="$HOME/.local/share/saran/bin:$PATH"
 > ```
+
+**Why compilation?** Since Saran itself is installed via `cargo`, users have Rust available. Compilation happens once at install time; every subsequent invocation is a direct binary execution with zero overhead. This also means generated wrappers get proper tooling: `which gh-pr-ro` returns the real path, `--help` works natively, and shell completions can be generated.
 
 ---
 
@@ -45,9 +52,10 @@ saran install <path-to-yaml>
 1. Validates the YAML file against the Saran format spec
 2. Reads the `name:` field from the file
 3. Copies the file to `~/.local/share/saran/wrappers/<name>.yaml`
-4. Creates a symlink `~/.local/share/saran/bin/<name> → saran`
+4. Generates Rust source code from the wrapper definition
+5. Compiles the binary via `cargo build` and places it at `~/.local/share/saran/bin/<name>`
 
-If a wrapper with the same name is already installed, `saran install` exits with an error. Use `--force` to overwrite.
+If a wrapper with the same name is already installed, `saran install` exits with an error. Use `--force` to overwrite (re-compiles the binary).
 
 ```bash
 saran install ./gh-pr-ro.yaml
@@ -113,7 +121,7 @@ saran remove <name> [<name> ...]
 ```
 
 For each named wrapper:
-1. Removes the symlink at `~/.local/share/saran/bin/<name>`
+1. Removes the binary at `~/.local/share/saran/bin/<name>`
 2. Removes the wrapper file at `~/.local/share/saran/wrappers/<name>.yaml`
 3. Removes any per-wrapper entries for `<name>` from `~/.local/share/saran/env.yaml`
 
@@ -128,7 +136,7 @@ If the named wrapper is not installed, `saran remove` exits with an error.
 
 | Flag | Description |
 |---|---|
-| `--keep-env` | Remove the wrapper files and symlink but preserve per-wrapper entries in `env.yaml` |
+| `--keep-env` | Remove the wrapper binary and YAML but preserve per-wrapper entries in `env.yaml` |
 | `--dry-run` | Print what would be removed without making changes |
 
 ---
@@ -184,8 +192,8 @@ All Saran state lives under `~/.local/share/saran/` by default:
 
 ```
 ~/.local/share/saran/
-  bin/          Symlinks for installed wrappers (add to PATH)
-  wrappers/     Installed wrapper YAML files
+  bin/          Compiled wrapper binaries (add to PATH)
+  wrappers/     Source YAML files (for regeneration, inspection)
   env.yaml      Operator-managed variable configuration
 ```
 

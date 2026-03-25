@@ -1,7 +1,7 @@
-# redis-cli-info.server.ro
+# redis-cli-info.db.ro
 #
-# A Saran wrapper around `redis-cli` exposing a small set of read-only server
-# inspection commands against a fixed Redis server/database. Intended as a
+# A Saran wrapper around `redis-cli` exposing a small set of read-only database
+# inspection commands against a fixed Redis database. Intended as a
 # simple baseline example for Saran's integration tests.
 #
 # Excluded: arbitrary Redis commands, key reads, writes, and special modes such
@@ -9,9 +9,9 @@
 #
 # Included (read-only): ping, info-server, info-memory, dbsize
 
-name: redis-cli-info.server.ro
+name: redis-cli-info.db.ro
 version: "1.0.0"
-help: "Read-only redis-cli server inspection commands for $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
+help: "Read-only redis-cli database inspection commands for $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
 
 requires:
   - cli: redis-cli
@@ -22,14 +22,14 @@ vars:
     required: true
     help: "Redis password for $REDIS_HOST:$REDIS_PORT — must be set in host environment, not in saran env"
   - name: REDIS_HOST
-    default: 127.0.0.1
-    help: "Target Redis hostname"
+    required: true
+    help: "Target Redis hostname — set via: saran env redis-cli-info.db.ro REDIS_HOST=<host>"
   - name: REDIS_PORT
-    default: "6379"
-    help: "Target Redis TCP port"
+    required: true
+    help: "Target Redis TCP port — set via: saran env redis-cli-info.db.ro REDIS_PORT=<port>"
   - name: REDIS_DB
-    default: "0"
-    help: "Target Redis database number"
+    required: true
+    help: "Target Redis database number — set via: saran env redis-cli-info.db.ro REDIS_DB=<number>"
 
 commands:
   ping:

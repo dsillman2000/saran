@@ -1,0 +1,190 @@
+
+
+---
+scenario: SET command is rejected by read-only wrapper
+description: Write commands should fail with exit code nonzero
+
+given:
+  - redis: wipe
+
+when:
+  - command: redis-cli-info.db.ro SET mykey "value"
+
+then:
+  - exit_code: nonzero
+  - stderr_matches: "wasn't expected|Found argument"
+  - redis:
+      get:
+        mykey: null
+
+---
+scenario: DEL command is rejected by read-only wrapper
+description: DELETE operations should fail in read-only mode
+
+given:
+  - redis:
+      set:
+        mykey: "value"
+
+when:
+  - command: redis-cli-info.db.ro DEL mykey
+
+then:
+  - exit_code: nonzero
+  - stderr_matches: "wasn't expected|Found argument"
+  - redis:
+      get:
+        mykey: "value"
+
+---
+scenario: FLUSHDB is rejected by read-only wrapper
+description: Database flush should be blocked
+
+given:
+  - redis:
+      set:
+        key1: "value1"
+        key2: "value2"
+
+when:
+  - command: redis-cli-info.db.ro FLUSHDB
+
+then:
+  - exit_code: nonzero
+  - stderr_matches: "wasn't expected|Found argument"
+  - redis:
+      get:
+        key1: "value1"
+        key2: "value2"
+
+---
+scenario: KEYS command is allowed by key-meta wrapper
+description: KEYS pattern matching should succeed
+
+given:
+  - redis:
+      set:
+        user:1:name: "alice"
+        user:2:name: "bob"
+        product:widget: "gadget"
+
+when:
+  - command: redis-cli-key-meta.prefix.ro KEYS "user:*"
+
+then:
+  - exit_code: 0
+  - stdout_matches: "user:1:name"
+  - stdout_matches: "user:2:name"
+
+---
+scenario: EXISTS command is allowed by key-meta wrapper
+description: Key existence check should work
+
+given:
+  - redis:
+      set:
+        exists_key: "present"
+        another_key: "value"
+
+when:
+  - command: redis-cli-key-meta.prefix.ro exists exists_key
+  - command: redis-cli-key-meta.prefix.ro exists missing_key
+
+then:
+  - exit_code: 0
+  - stdout: "1\n0\n"
+
+---
+scenario: GET command is rejected by key-meta wrapper
+description: GET is a read but should be blocked by wrapper design
+
+given:
+  - redis:
+      set:
+        mykey: "myvalue"
+
+when:
+  - command: redis-cli-key-meta.prefix.ro GET mykey
+
+then:
+  - exit_code: nonzero
+  - stderr_matches: "wasn't expected|Found argument"
+
+---
+scenario: SET command is rejected by key-meta wrapper
+description: Write operations must be blocked
+
+given:
+  - redis: wipe
+
+when:
+  - command: redis-cli-key-meta.prefix.ro SET newkey "value"
+
+then:
+  - exit_code: nonzero
+  - stderr_matches: "wasn't expected|Found argument"
+  - redis:
+      get:
+        newkey: null
+
+---
+scenario: TYPE command is allowed by key-meta wrapper
+description: Querying key type should succeed
+
+given:
+  - redis:
+      set:
+        string_key: "value"
+        list_key: "item1"
+
+when:
+  - command: redis-cli-key-meta.prefix.ro type string_key
+  - command: redis-cli-key-meta.prefix.ro type list_key
+
+then:
+  - exit_code: 0
+  - stdout_matches: "string"
+  - stdout_matches: "list"
+
+---
+scenario: wrapper fails when redis connection refused
+description: Connection errors should produce exit code 1
+
+given:
+  - env:
+      REDIS_ADDRESS: redis://localhost:9999
+
+when:
+  - command: redis-cli-info.db.ro dbsize
+
+then:
+  - exit_code: 1
+  - stderr_matches: "Connection refused|Could not connect"
+
+---
+scenario: wrapper respects REDIS_ADDRESS env override
+description: Custom REDIS_ADDRESS should be used for connection
+
+given:
+  - redis: wipe
+  - env:
+      REDIS_ADDRESS: redis://localhost:6379
+
+when:
+  - command: redis-cli-info.db.ro dbsize
+
+then:
+  - exit_code: 0
+
+---
+scenario: wrapper handles missing redis gracefully
+description: When redis is not running, error message is clear
+
+given:
+  - redis: wipe
+
+when:
+  - command: redis-cli-info.db.ro dbsize
+
+then:
+  - exit_code: 1

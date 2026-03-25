@@ -14,7 +14,7 @@
 
 name: redis-cli-key-meta.prefix.ro
 version: "1.0.0"
-help: "Read-only redis-cli key metadata commands for keys under $REDIS_KEY_PREFIX*"
+help: "Read-only redis-cli key metadata commands for keys under $REDIS_KEY_PREFIX* on $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
 
 requires:
   - cli: redis-cli
@@ -39,12 +39,12 @@ vars:
 
 commands:
   scan:
-    help: "Scan keys under $REDIS_KEY_PREFIX*"
+    help: "Scan keys under $REDIS_KEY_PREFIX* on $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
     actions:
-      - redis-cli: [--scan, --pattern, "$REDIS_KEY_PREFIX*", -h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB"]
+      - redis-cli: [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", --scan, --pattern, "$REDIS_KEY_PREFIX*"]
 
   type:
-    help: "Show TYPE for a key under $REDIS_KEY_PREFIX*"
+    help: "Show TYPE for a key under $REDIS_KEY_PREFIX* on $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
     args:
       - name: key-suffix
         var_name: KEY_SUFFIX
@@ -55,7 +55,7 @@ commands:
       - redis-cli: [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", TYPE, "$REDIS_KEY_PREFIX$KEY_SUFFIX"]
 
   ttl:
-    help: "Show TTL for a key under $REDIS_KEY_PREFIX*"
+    help: "Show TTL for a key under $REDIS_KEY_PREFIX* on $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
     args:
       - name: key-suffix
         var_name: KEY_SUFFIX
@@ -66,7 +66,7 @@ commands:
       - redis-cli: [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", TTL, "$REDIS_KEY_PREFIX$KEY_SUFFIX"]
 
   exists:
-    help: "Check whether a key exists under $REDIS_KEY_PREFIX*"
+    help: "Check whether a key exists under $REDIS_KEY_PREFIX* on $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
     args:
       - name: key-suffix
         var_name: KEY_SUFFIX
