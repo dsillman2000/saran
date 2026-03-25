@@ -19,15 +19,24 @@ Saran uses a **code generation** model: each installed wrapper is a standalone C
 
 This means every wrapper is a true executable with native `--help`, completions, and fast startup — no YAML parsing or routing logic at runtime.
 
-```
-~/.local/share/saran/
-  bin/                 # Compiled wrapper binaries (add to PATH)
-    gh-pr-ro           # Actual executable
-    gh-issue-ro        # Actual executable
-  wrappers/            # Source YAML (for regeneration/inspection)
-    gh-pr-ro.yaml
-    gh-issue-ro.yaml
-  env.yaml             # Runtime variable configuration
+```mermaid
+graph TD
+    A["~/.local/share/saran/"]
+    B["bin/<br/>Compiled wrapper binaries<br/>add to PATH"]
+    C["gh-pr.repo.ro<br/>Actual executable"]
+    D["gh-issue.ro<br/>Actual executable"]
+    E["wrappers/<br/>Source YAML<br/>for regeneration/inspection"]
+    F["gh-pr.repo.ro.yaml"]
+    G["gh-issue.ro.yaml"]
+    H["env.yaml<br/>Runtime variable configuration"]
+    
+    A --> B
+    A --> E
+    A --> H
+    B --> C
+    B --> D
+    E --> F
+    E --> G
 ```
 
 > **PATH setup:** Add `~/.local/share/saran/bin` to your shell `PATH` to make installed wrappers directly invocable by name:
@@ -35,7 +44,7 @@ This means every wrapper is a true executable with native `--help`, completions,
 > export PATH="$HOME/.local/share/saran/bin:$PATH"
 > ```
 
-**Why compilation?** Since Saran itself is installed via `cargo`, users have Rust available. Compilation happens once at install time; every subsequent invocation is a direct binary execution with zero overhead. This also means generated wrappers get proper tooling: `which gh-pr-ro` returns the real path, `--help` works natively, and shell completions can be generated.
+**Why compilation?** Since Saran itself is installed via `cargo`, users have Rust available. Compilation happens once at install time; every subsequent invocation is a direct binary execution with zero overhead. This also means generated wrappers get proper tooling: `which gh-pr.repo.ro` returns the real path, `--help` works natively, and shell completions can be generated.
 
 ---
 
@@ -58,8 +67,8 @@ saran install <path-to-yaml>
 If a wrapper with the same name is already installed, `saran install` exits with an error. Use `--force` to overwrite (re-compiles the binary).
 
 ```bash
-saran install ./gh-pr-ro.yaml
-saran install ./gh-pr-ro.yaml --force   # overwrite existing
+saran install ./gh-pr.repo.ro.yaml
+saran install ./gh-pr.repo.ro.yaml --force   # overwrite existing
 ```
 
 ### Remote install via Git
@@ -75,10 +84,10 @@ Clones or fetches the specified Git repository and installs wrapper(s) from it.
 saran install --git github.com/myorg/saran-wrappers
 
 # Install a specific file within the repo
-saran install --git github.com/myorg/saran-wrappers gh-pr-ro.yaml
+saran install --git github.com/myorg/saran-wrappers gh-pr.repo.ro.yaml
 
 # Install from a subdirectory
-saran install --git github.com/myorg/saran-wrappers wrappers/gh-pr-ro.yaml
+saran install --git github.com/myorg/saran-wrappers wrappers/gh-pr.repo.ro.yaml
 ```
 
 **URL format:** The `--git` value is a repository URL. The following formats are accepted:
@@ -95,7 +104,7 @@ saran install --git github.com/myorg/saran-wrappers wrappers/gh-pr-ro.yaml
 
 ```bash
 saran install --git github.com/myorg/saran-wrappers@v1.2.0
-saran install --git github.com/myorg/saran-wrappers@main gh-pr-ro.yaml
+saran install --git github.com/myorg/saran-wrappers@main gh-pr.repo.ro.yaml
 ```
 
 If no `@ref` is specified, the default branch HEAD is used.
@@ -126,8 +135,8 @@ For each named wrapper:
 3. Removes any per-wrapper entries for `<name>` from `~/.local/share/saran/env.yaml`
 
 ```bash
-saran remove gh-pr-ro
-saran remove gh-pr-ro gh-issue-ro   # remove multiple at once
+saran remove gh-pr.repo.ro
+saran remove gh-pr.repo.ro gh-issue.ro   # remove multiple at once
 ```
 
 If the named wrapper is not installed, `saran remove` exits with an error.
@@ -148,9 +157,9 @@ Lists all currently installed wrappers.
 ```
 $ saran list
 
-gh-pr-ro      1.0.0   ~/.local/share/saran/wrappers/gh-pr-ro.yaml
-gh-issue-ro   1.0.0   ⚠ gh 1.8.3 (requires >=2.0.0)   ~/.local/share/saran/wrappers/gh-issue-ro.yaml
-greet         0.1.0   ~/.local/share/saran/wrappers/greet.yaml
+gh-pr.repo.ro  1.0.0   ~/.local/share/saran/wrappers/gh-pr.repo.ro.yaml
+gh-issue.ro    1.0.0   ⚠ gh 1.8.3 (requires >=2.0.0)   ~/.local/share/saran/wrappers/gh-issue.ro.yaml
+greet          0.1.0   ~/.local/share/saran/wrappers/greet.yaml
 ```
 
 The version shown is read from the `version:` field in each installed wrapper's YAML file — it reflects the wrapper definition version, not the underlying CLI's version. For wrappers installed via `--git`, the `@ref` tag pins which revision of the repository is fetched, but the displayed version always comes from the `version:` field inside the wrapper file itself.
@@ -172,14 +181,14 @@ Exits with code `0` if the file is valid, non-zero with a descriptive error mess
 Validation includes checking all `requires:` constraints against the current system. If any version probe fails or the detected version does not satisfy the declared constraint, `saran validate` exits non-zero with a clear diagnostic:
 
 ```bash
-saran validate ./gh-pr-ro.yaml
-# → OK: gh-pr-ro v1.0.0 (6 commands, 2 vars, 1 requirement checked)
+saran validate ./gh-pr.repo.ro.yaml
+# → OK: gh-pr.repo.ro v1.0.0 (6 commands, 2 vars, 1 requirement checked)
 
-saran validate ./gh-pr-ro.yaml
+saran validate ./gh-pr.repo.ro.yaml
 # → error: requires gh >=2.0.0, but found gh 1.8.3
 #          Update gh or loosen the version constraint in the wrapper.
 
-saran validate ./gh-pr-ro.yaml
+saran validate ./gh-pr.repo.ro.yaml
 # → error: requires gh >=2.0.0, but version probe failed: `gh --version` exited with code 127
 #          Ensure `gh` is installed and available on PATH.
 ```

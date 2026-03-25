@@ -83,45 +83,91 @@ struct SaranEnv {
 
 ## File Structure (Implementation)
 
-```
-src/
-├── lib.rs
-├── validation/
-│   ├── mod.rs           # YAML validation (01)
-│   ├── schema.rs        # Validation rules
-│   └── error.rs         # Validation errors
-├── parsing/
-│   ├── mod.rs           # Token parsing (02)
-│   ├── tokens.rs        # Token types
-│   └── parser.rs        # Token parser
-├── resolution/
-│   ├── mod.rs           # Variable resolution (03)
-│   ├── env.rs           # env.yaml parsing
-│   └── priority.rs      # Priority chain logic
-├── substitution/
-│   ├── mod.rs           # Substitution resolution (04)
-│   ├── resolver.rs      # Value resolver
-│   └── context.rs       # Resolution context
-├── assembly/
-│   ├── mod.rs           # Argument assembly (05)
-│   ├── argv.rs          # argv builder
-│   └── flags.rs         # Flag handling
-└── integration/
-    ├── mod.rs           # Integration tests
-    ├── startup.rs       # Startup flow
-    └── invocation.rs    # Invocation flow
+```mermaid
+graph TD
+    A["src/"]
+    B["lib.rs"]
+    C["validation/"]
+    D["mod.rs<br/>YAML validation 01"]
+    E["schema.rs<br/>Validation rules"]
+    F["error.rs<br/>Validation errors"]
+    
+    G["parsing/"]
+    H["mod.rs<br/>Token parsing 02"]
+    I["tokens.rs<br/>Token types"]
+    J["parser.rs<br/>Token parser"]
+    
+    K["resolution/"]
+    L["mod.rs<br/>Variable resolution 03"]
+    M["env.rs<br/>env.yaml parsing"]
+    N["priority.rs<br/>Priority chain logic"]
+    
+    O["substitution/"]
+    P["mod.rs<br/>Substitution resolution 04"]
+    Q["resolver.rs<br/>Value resolver"]
+    R["context.rs<br/>Resolution context"]
+    
+    S["assembly/"]
+    T["mod.rs<br/>Argument assembly 05"]
+    U["argv.rs<br/>argv builder"]
+    V["flags.rs<br/>Flag handling"]
+    
+    W["integration/"]
+    X["mod.rs<br/>Integration tests"]
+    Y["startup.rs<br/>Startup flow"]
+    Z["invocation.rs<br/>Invocation flow"]
+    
+    A --> B
+    A --> C
+    A --> G
+    A --> K
+    A --> O
+    A --> S
+    A --> W
+    
+    C --> D
+    C --> E
+    C --> F
+    
+    G --> H
+    G --> I
+    G --> J
+    
+    K --> L
+    K --> M
+    K --> N
+    
+    O --> P
+    O --> Q
+    O --> R
+    
+    S --> T
+    S --> U
+    S --> V
+    
+    W --> X
+    W --> Y
+    W --> Z
 ```
 
 ## Test Structure
 
-```
-tests/
-├── validation.rs        # 01-yaml-validation.md (59 tests)
-├── token_parsing.rs     # 02-token-parsing.md (6 tests)
-├── variable_resolution.rs # 03-variable-resolution.md (14 tests)
-├── substitution_resolution.rs # 04-substitution-resolution.md (10 tests)
-├── argument_assembly.rs # 05-argument-assembly.md (19 tests)
-└── integration.rs       # End-to-end tests
+```mermaid
+graph TD
+    A["tests/"]
+    B["validation.rs<br/>01-yaml-validation.md<br/>59 tests"]
+    C["token_parsing.rs<br/>02-token-parsing.md<br/>6 tests"]
+    D["variable_resolution.rs<br/>03-variable-resolution.md<br/>14 tests"]
+    E["substitution_resolution.rs<br/>04-substitution-resolution.md<br/>10 tests"]
+    F["argument_assembly.rs<br/>05-argument-assembly.md<br/>19 tests"]
+    G["integration.rs<br/>End-to-end tests"]
+    
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    A --> F
+    A --> G
 ```
 
 ## Risk Mitigation

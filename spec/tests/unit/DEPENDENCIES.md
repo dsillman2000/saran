@@ -74,7 +74,7 @@ fn test_variable_resolution() {
     // Mock parsed env.yaml
     let mock_env_yaml = ParsedEnvYaml {
         global: HashMap::from([("GH_TOKEN", "global-token")]),
-        wrappers: HashMap::from([("gh-pr-ro", HashMap::from([("GH_REPO", "org/repo")]))]),
+        wrappers: HashMap::from([("gh-pr.repo.ro", HashMap::from([("GH_REPO", "org/repo")]))]),
     };
     
     // Mock variable declarations
@@ -84,7 +84,7 @@ fn test_variable_resolution() {
     ];
     
     // Test resolution
-    let result = resolve_vars(&var_decls, &mock_env_yaml, "gh-pr-ro");
+    let result = resolve_vars(&var_decls, &mock_env_yaml, "gh-pr.repo.ro");
     assert_eq!(result["GH_REPO"].value, "org/repo");
     assert_eq!(result["GH_TOKEN"].value, "global-token");
 }

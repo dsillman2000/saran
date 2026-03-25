@@ -25,7 +25,7 @@ If all four sources yield no value and the variable is declared `required: true`
 
 ```
 error: required variable `GH_TOKEN` is not set.
-       Set it in your host environment or via: saran env gh-pr-ro GH_TOKEN=<value>
+       Set it in your host environment or via: saran env gh-pr.repo.ro GH_TOKEN=<value>
        Note: storing secrets in saran env is not recommended — use your host environment instead.
 ```
 
@@ -45,11 +45,11 @@ $ saran env
 global:
   (none)
 
-gh-pr-ro:
+gh-pr.repo.ro:
   GH_TOKEN   ⚠  required — not set (set in host environment)
   GH_REPO    myorg/myrepo   [default]
 
-gh-issue-ro:
+gh-issue.ro:
   GH_TOKEN   ⚠  required — not set (set in host environment)
   GH_REPO    myorg/myrepo   [default]
 ```
@@ -59,9 +59,9 @@ gh-issue-ro:
 Prints variable resolution state for a single installed wrapper only.
 
 ```
-$ saran env gh-pr-ro
+$ saran env gh-pr.repo.ro
 
-gh-pr-ro:
+gh-pr.repo.ro:
   GH_TOKEN   ⚠  required — not set (set in host environment)
   GH_REPO    myotherorg/myotherrepo   [per-wrapper]
 ```
@@ -71,14 +71,14 @@ gh-pr-ro:
 Sets a variable in the per-wrapper or global namespace of `env.yaml`.
 
 ```bash
-# Per-wrapper: only affects gh-pr-ro
-saran env gh-pr-ro GH_REPO=myotherorg/myotherrepo
+# Per-wrapper: only affects gh-pr.repo.ro
+saran env gh-pr.repo.ro GH_REPO=myotherorg/myotherrepo
 
 # Global: affects all wrappers that declare GH_REPO
 saran env GH_REPO=myotherorg/myotherrepo
 
 # Multiple assignments in one command
-saran env gh-pr-ro GH_REPO=myotherorg/myotherrepo GH_PR_ID=99
+saran env gh-pr.repo.ro GH_REPO=myotherorg/myotherrepo GH_PR_ID=99
 ```
 
 When a per-wrapper value is set, it takes precedence over the global namespace, host environment, and wrapper default for that wrapper only.
@@ -88,7 +88,18 @@ When a per-wrapper value is set, it takes precedence over the global namespace, 
 Removes a variable from the per-wrapper or global namespace, allowing the next lower-priority source to take effect.
 
 ```bash
-saran env gh-pr-ro --unset GH_REPO    # removes per-wrapper override; falls back to global/host/default
+saran env gh-pr.repo.ro --unset GH_REPO    # removes per-wrapper override; falls back to global/host/default
+saran env --unset GH_REPO             # removes global override
+```
+
+When a per-wrapper value is set, it takes precedence over the global namespace, host environment, and wrapper default for that wrapper only.
+
+### Unset: `saran env [<wrapper>] --unset VAR`
+
+Removes a variable from the per-wrapper or global namespace, allowing the next lower-priority source to take effect.
+
+```bash
+saran env gh-pr.repo.ro --unset GH_REPO    # removes per-wrapper override; falls back to global/host/default
 saran env --unset GH_REPO             # removes global override
 ```
 
@@ -119,9 +130,9 @@ global:
   GH_DEBUG: "1"
 
 wrappers:
-  gh-pr-ro:
+  gh-pr.repo.ro:
     GH_REPO: myotherorg/myotherrepo
-  gh-issue-ro:
+  gh-issue.ro:
     GH_REPO: myotherorg/myotherrepo
 ```
 

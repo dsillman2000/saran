@@ -49,17 +49,28 @@ cargo test                             # All tests
 
 ## File Structure
 
-```
-spec/tests/unit/
-├── README.md                          # This file
-├── DEPENDENCIES.md                    # Dependency analysis
-├── IMPLEMENTATION.md                  # Implementation plan
-├── 01-yaml-validation.md              # 59 tests - Pure validation
-├── 02-token-parsing.md                # 6 tests - Pure string parsing
-├── 03-variable-resolution.md          # 14 tests - Mock env.yaml
-├── 04-substitution-resolution.md      # 10 tests - Mock tokens + values
-├── 05-argument-assembly.md            # 19 tests - Mock substituted args
-└── _archive/                          # Historical analysis docs
+```mermaid
+graph TD
+    A["spec/tests/unit/"]
+    B["README.md<br/>This file"]
+    C["DEPENDENCIES.md<br/>Dependency analysis"]
+    D["IMPLEMENTATION.md<br/>Implementation plan"]
+    E["01-yaml-validation.md<br/>59 tests - Pure validation"]
+    F["02-token-parsing.md<br/>6 tests - Pure string parsing"]
+    G["03-variable-resolution.md<br/>14 tests - Mock env.yaml"]
+    H["04-substitution-resolution.md<br/>10 tests - Mock tokens + values"]
+    I["05-argument-assembly.md<br/>19 tests - Mock substituted args"]
+    J["_archive/<br/>Historical analysis docs"]
+    
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    A --> F
+    A --> G
+    A --> H
+    A --> I
+    A --> J
 ```
 
 ## Test Format

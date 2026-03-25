@@ -83,7 +83,7 @@ Unit tests for the variable resolution system defined in `saran-env.md`. These t
 global:
   GH_REPO: "org/global-repo"
 wrappers:
-  gh-pr-ro:
+  gh-pr.repo.ro:
     GH_REPO: "org/per-wrapper-repo"
 
 # SaranVarDecl
@@ -92,7 +92,7 @@ name: GH_REPO, required: false, default: "org/default-repo"
 # Host environment
 GH_REPO="org/host-repo"
 
-# Expected for wrapper "gh-pr-ro"
+# Expected for wrapper "gh-pr.repo.ro"
 resolved["GH_REPO"] = { value: "org/per-wrapper-repo", scope: PerWrapper }
 ```
 

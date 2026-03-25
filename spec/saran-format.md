@@ -500,7 +500,7 @@ A common decision when authoring a wrapper is whether to fix a resource scope (e
 **Open wrapper** — omit the scoping variable entirely. The caller (or ambient environment) controls scope through the underlying CLI's own mechanisms. Suitable when the wrapper is shared across multiple projects.
 
 ```yaml
-# gh-pr-ro: no GH_REPO var, no -R flag — works against any repo
+# gh-pr.ro: no GH_REPO var, no -R flag — works against any repo
 commands:
   list:
     actions:
@@ -510,7 +510,7 @@ commands:
 **Scope-locked wrapper** — declare the scoping variable as `required: true` with no `default:`. The wrapper will refuse to start unless the variable is set in the environment or `saran env`. Suitable for project-specific wrappers that should never accidentally operate against the wrong resource.
 
 ```yaml
-# gh-pr-repo-ro: GH_REPO must be set — always operates on the declared repo
+# gh-pr.repo.ro: GH_REPO must be set — always operates on the declared repo
 vars:
   - name: GH_REPO
     required: true

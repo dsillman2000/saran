@@ -46,81 +46,56 @@ This document maps all Saran specifications and their relationships. Use this to
 
 ### 1. Installation Flow
 
-```
-User runs: saran install wrapper.yaml
-        ↓
-    Parse YAML (serde_yaml)
-        ↓
-    Validate schema (01-yaml-validation.md) [59 unit tests]
-        ↓
-    Check version requirements
-        ↓
-    Generate Rust code (saran-codegen.md) [unit tests]
-        ↓
-    Compile via cargo build
-        ↓
-    Place binary in ~/.local/share/saran/bin/
-        ↓
-    Store YAML in ~/.local/share/saran/wrappers/
+```mermaid
+flowchart TD
+    A["User runs: saran install wrapper.yaml"]
+    B["Parse YAML<br/>serde_yaml"]
+    C["Validate schema<br/>01-yaml-validation.md<br/>59 unit tests"]
+    D["Check version<br/>requirements"]
+    E["Generate Rust code<br/>saran-codegen.md"]
+    F["Compile via<br/>cargo build"]
+    G["Place binary in<br/>~/.local/share/saran/bin/"]
+    H["Store YAML in<br/>~/.local/share/saran/wrappers/"]
+    
+    A --> B --> C --> D --> E --> F --> G --> H
 ```
 
 ### 2. Execution Flow
 
-```
-User runs: gh-pr-ro list
-        ↓
-    Parse CLI args with clap
-        ↓
-    Resolve vars from env.yaml
-        - Per-wrapper namespace
-        - Global namespace
-        - Host environment
-        - Default values
-        (03-variable-resolution.md) [14 unit tests]
-        ↓
-    Check required vars present
-        ↓
-    Route to command handler
-        ↓
-    Substitute $VAR_NAME tokens
-        (04-substitution-resolution.md) [10 unit tests]
-        ↓
-    Assemble argv with optional flags
-        (05-argument-assembly.md) [19 unit tests]
-        ↓
-    Parse $VAR_NAME tokens (02-token-parsing.md) [6 unit tests]
-        ↓
-    Build process environment (forced variables)
-        (saran-codegen.md)
-        ↓
-    exec_action(executable, argv, resolved_vars)
-        ↓
-    Stream I/O back to caller
-        ↓
-    Return exit code
+```mermaid
+flowchart TD
+    A["User runs: gh-pr.repo.ro list"]
+    B["Parse CLI args<br/>with clap"]
+    C["Resolve vars from env.yaml<br/>1. Per-wrapper namespace<br/>2. Global namespace<br/>3. Host environment<br/>4. Default values<br/>03-variable-resolution.md<br/>14 unit tests"]
+    D["Check required<br/>vars present"]
+    E["Route to<br/>command handler"]
+    F["Substitute $VAR_NAME<br/>tokens<br/>04-substitution-resolution.md<br/>10 unit tests"]
+    G["Assemble argv with<br/>optional flags<br/>05-argument-assembly.md<br/>19 unit tests"]
+    H["Parse $VAR_NAME tokens<br/>02-token-parsing.md<br/>6 unit tests"]
+    I["Build process environment<br/>forced variables<br/>saran-codegen.md"]
+    J["exec_action<br/>executable, argv,<br/>resolved_vars"]
+    K["Stream I/O<br/>back to caller"]
+    L["Return<br/>exit code"]
+    
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L
 ```
 
 ### 3. Variable Configuration Flow
 
-```
-Operator runs: saran env
-        ↓
-    Parse ~/.local/share/saran/env.yaml
-        ↓
-    Display all variables for all wrappers
-        with source annotations
-
-Operator runs: saran env gh-pr-ro GH_REPO=myorg/myrepo
-        ↓
-    Load env.yaml
-        ↓
-    Set per-wrapper value
-        ↓
-    Write back to env.yaml
-        ↓
-    When gh-pr-ro next runs:
-        GH_REPO resolves to myorg/myrepo
-        (highest priority in chain)
+```mermaid
+flowchart TD
+    A["Operator runs: saran env"]
+    B["Parse<br/>~/.local/share/saran/env.yaml"]
+    C["Display all variables for<br/>all wrappers with<br/>source annotations"]
+    
+    D["Operator runs: saran env<br/>gh-pr.repo.ro<br/>GH_REPO=myorg/myrepo"]
+    E["Load env.yaml"]
+    F["Set per-wrapper<br/>value"]
+    G["Write back to<br/>env.yaml"]
+    H["When gh-pr.repo.ro<br/>next runs:<br/>GH_REPO resolves to<br/>myorg/myrepo<br/>highest priority in chain"]
+    
+    A --> B --> C
+    D --> E --> F --> G --> H
 ```
 
 ---
@@ -221,23 +196,37 @@ Priority order (highest → lowest):
 
 ## Specification Dependencies
 
-```
-saran-format.md (base)
-    ├─→ saran-codegen.md (how format becomes code)
-    ├─→ 01-yaml-validation.md (tests)
-    ├─→ 02-token-parsing.md (tests)
-    └─→ 04-substitution-resolution.md (tests)
-        └─→ 05-argument-assembly.md (tests)
-
-saran-env.md (base)
-    ├─→ 03-variable-resolution.md (tests)
-    └─→ saran-codegen.md (how vars are resolved at runtime)
-
-saran-cli.md (reference)
-    └─→ Integration tests (TBD)
-
-saran-conventions.md (guidelines)
-    └─→ Example wrappers in spec/examples/
+```mermaid
+graph TD
+    A["saran-format.md<br/>base"]
+    B["saran-codegen.md<br/>how format becomes code"]
+    C["01-yaml-validation.md<br/>tests"]
+    D["02-token-parsing.md<br/>tests"]
+    E["04-substitution-resolution.md<br/>tests"]
+    F["05-argument-assembly.md<br/>tests"]
+    
+    G["saran-env.md<br/>base"]
+    H["03-variable-resolution.md<br/>tests"]
+    I["saran-codegen.md<br/>how vars are resolved at runtime"]
+    
+    J["saran-cli.md<br/>reference"]
+    K["Integration tests<br/>TBD"]
+    
+    L["saran-conventions.md<br/>guidelines"]
+    M["Example wrappers<br/>spec/examples/"]
+    
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    E --> F
+    
+    G --> H
+    G --> I
+    
+    J --> K
+    
+    L --> M
 ```
 
 ---
@@ -287,39 +276,72 @@ saran-conventions.md (guidelines)
 
 ## Files in This Directory
 
-```
-spec/
-├── saran-format.md              # YAML schema spec
-├── saran-cli.md                 # CLI command reference
-├── saran-env.md                 # Variable resolution
-├── saran-conventions.md         # Naming conventions
-├── saran-codegen.md             # Code generation spec ← NEW
-│
-├── tests/
-│   ├── unit/
-│   │   ├── README.md
-│   │   ├── IMPLEMENTATION.md
-│   │   ├── DEPENDENCIES.md
-│   │   ├── 01-yaml-validation.md
-│   │   ├── 02-token-parsing.md
-│   │   ├── 03-variable-resolution.md
-│   │   ├── 04-substitution-resolution.md
-│   │   └── 05-argument-assembly.md
-│   │
-│   └── integration/
-│       ├── README.md
-│       └── scenarios/
-│           └── ro.yaml
-│
-├── examples/
-│   ├── redis-cli/
-│   │   ├── redis-cli-info.db.ro.yaml
-│   │   ├── redis-cli-key-meta.prefix.ro.yaml
-│   │   └── redis-cli-string-set.key.rw.quota.yaml
-│   ├── gh/
-│   └── glab/
-│
-└── README.md
+```mermaid
+graph TD
+    A["spec/"]
+    B["saran-format.md<br/>YAML schema spec"]
+    C["saran-cli.md<br/>CLI command reference"]
+    D["saran-env.md<br/>Variable resolution"]
+    E["saran-conventions.md<br/>Naming conventions"]
+    F["saran-codegen.md<br/>Code generation spec ← NEW"]
+    
+    G["tests/"]
+    H["unit/"]
+    I["README.md"]
+    J["IMPLEMENTATION.md"]
+    K["DEPENDENCIES.md"]
+    L["01-yaml-validation.md"]
+    M["02-token-parsing.md"]
+    N["03-variable-resolution.md"]
+    O["04-substitution-resolution.md"]
+    P["05-argument-assembly.md"]
+    
+    Q["integration/"]
+    R["README.md"]
+    S["scenarios/"]
+    T["ro.yaml"]
+    
+    U["examples/"]
+    V["redis-cli/"]
+    W["redis-cli-info.db.ro.yaml"]
+    X["redis-cli-key-meta.prefix.ro.yaml"]
+    Y["redis-cli-string-set.key.rw.quota.yaml"]
+    Z["gh/"]
+    AA["glab/"]
+    
+    AB["README.md"]
+    
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    A --> F
+    A --> G
+    A --> U
+    A --> AB
+    
+    G --> H
+    G --> Q
+    
+    H --> I
+    H --> J
+    H --> K
+    H --> L
+    H --> M
+    H --> N
+    H --> O
+    H --> P
+    
+    Q --> R
+    Q --> S
+    S --> T
+    
+    U --> V
+    U --> Z
+    U --> AA
+    V --> W
+    V --> X
+    V --> Y
 ```
 
 ---

@@ -39,11 +39,16 @@ Wrappers handle failures gracefully:
 
 ## Test Structure
 
-```
-integration/
-├── redis/           # Wrapper definitions for testing
-│   └── *.yaml
-└── README.md        # This file
+```mermaid
+graph TD
+    A["integration/"]
+    B["redis/<br/>Wrapper definitions<br/>for testing"]
+    C["*.yaml"]
+    D["README.md<br/>This file"]
+    
+    A --> B
+    A --> D
+    B --> C
 ```
 
 Integration tests are slower than unit tests but provide confidence that wrappers work correctly with real tools.
