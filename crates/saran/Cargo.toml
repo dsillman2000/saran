@@ -1,0 +1,22 @@
+[package]
+name = "saran"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "saran"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+serde_yaml.workspace = true
+serde.workspace = true
+saran-types.workspace = true
+saran-core.workspace = true
+saran-parser.workspace = true
+saran-validation.workspace = true
+saran-codegen.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tempfile.workspace = true
