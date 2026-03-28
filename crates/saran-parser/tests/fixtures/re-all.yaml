@@ -7,8 +7,7 @@ re-01-missing-cli:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: []
+        - "gh": []
   requires:
     - version: ">=1.0.0"  # RE-01: missing cli field
 
@@ -18,8 +17,7 @@ re-02-missing-version:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: []
+        - "gh": []
   requires:
     - cli: "gh"  # RE-02: missing version field
 
@@ -29,8 +27,7 @@ re-03-invalid-semver-constraint:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: []
+        - "gh": []
   requires:
     - cli: "gh"
       version: "not-semver"  # RE-03: invalid semver constraint
@@ -41,8 +38,7 @@ re-04-version-probe-not-array:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: []
+        - "gh": []
   requires:
     - cli: "gh"
       version: ">=1.0.0"
@@ -54,8 +50,7 @@ re-05-version-probe-empty:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: []
+        - "gh": []
   requires:
     - cli: "gh"
       version: ">=1.0.0"
@@ -67,8 +62,7 @@ re-06-invalid-regex:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: []
+        - "gh": []
   requires:
     - cli: "gh"
       version: ">=1.0.0"
@@ -80,8 +74,7 @@ re-07-regex-no-capture:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: []
+        - "gh": []
   requires:
     - cli: "gh"
       version: ">=1.0.0"
@@ -93,8 +86,7 @@ re-08-duplicate-cli:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: []
+        - "gh": []
   requires:
     - cli: "gh"
       version: ">=1.0.0"
@@ -107,8 +99,7 @@ re-09-valid-requires:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: []
+        - "gh": []
   requires:
     - cli: "gh"
       version: ">=1.0.0,<2.0.0"

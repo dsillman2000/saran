@@ -36,7 +36,7 @@ When the spec changes, update the corresponding type and doc comments immediatel
 
 ### 3. **Serde Serialization**
 
-All types use `#[serde(derive)]` for YAML round-tripping. Key patterns:
+Most types use `#[serde(derive)]` for YAML round-tripping. Key patterns:
 
 - **Required fields** — no `Option`, no serde attributes
 - **Optional fields** — `Option<T>` + `#[serde(skip_serializing_if = "Option::is_none")]`
@@ -54,6 +54,38 @@ pub struct VarDecl {
     pub default: Option<String>,               // Optional, omitted if None
 }
 ```
+
+#### **Custom Deserializers**
+
+The `Action` type uses a **custom deserializer** to handle the spec-compliant YAML format where the executable name is a dynamic map key with its arguments as the value:
+
+```yaml
+# YAML format (spec-compliant)
+- gh: [pr, list, -R, "$GH_REPO"]
+  optional_flags:
+    - name: --draft
+      type: bool
+```
+
+The custom deserializer (`impl<'de> Deserialize<'de> for Action`) in `src/lib.rs` (lines 230-277):
+
+- Accepts a YAML map with the executable name as a single key
+- Extracts the executable name from the map key
+- Extracts the args array from the key's value
+- Handles `optional_flags:` as a sibling key at the same indentation level
+- Returns errors if the format is invalid (multiple executable keys, missing args, etc.)
+
+The internal `Action` struct still uses the standard field layout:
+
+```rust
+pub struct Action {
+    pub executable: String,
+    pub args: Vec<String>,
+    pub optional_flags: Vec<OptionalFlag>,
+}
+```
+
+This keeps type definitions simple while supporting the spec's YAML schema transparently.
 
 ### 4. **Ordered Collections**
 
@@ -153,5 +185,17 @@ assert_eq!(wrapper, roundtrip);
 ## Future Considerations
 
 - **Validation errors as types** — if validation errors become complex, move to `saran-types` for reuse
-- **Custom deserializers** — if YAML schema evolves, custom serde implementations belong here
 - **Builder patterns** — if type construction becomes complex, consider builder types
+
+## Implemented Features
+
+### Custom Deserializers (Action Type)
+
+The `Action` type implements a custom deserializer to handle the spec-compliant YAML format where the executable name is a dynamic map key. See section 3 above for details.
+
+**Why custom deserializer?** The YAML schema uses the executable name as a dynamic key (e.g., `gh: [...]`) rather than a fixed field name. Serde's derive macro cannot handle dynamic keys, so a custom deserializer was necessary to:
+
+1. Extract the executable name from the map key
+2. Extract args from the map value
+3. Maintain the standard internal field structure
+4. Provide clear error messages for invalid formats

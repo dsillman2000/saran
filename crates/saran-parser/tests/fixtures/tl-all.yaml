@@ -6,8 +6,7 @@ tl-01-missing-name:
   commands:
     test:
       actions:
-        - executable: "echo"
-          args: []
+        - "echo": []
 
 tl-02-empty-name:
   name: ""
@@ -15,16 +14,14 @@ tl-02-empty-name:
   commands:
     test:
       actions:
-        - executable: "echo"
-          args: []
+        - "echo": []
 
 tl-03-missing-version:
   name: "test-wrapper"
   commands:
     test:
       actions:
-        - executable: "echo"
-          args: []
+        - "echo": []
 
 tl-04-invalid-semver:
   name: "test-wrapper"
@@ -32,8 +29,7 @@ tl-04-invalid-semver:
   commands:
     test:
       actions:
-        - executable: "echo"
-          args: []
+        - "echo": []
 
 tl-05-valid-prerelease:
   name: "test-wrapper"
@@ -41,8 +37,7 @@ tl-05-valid-prerelease:
   commands:
     test:
       actions:
-        - executable: "echo"
-          args: []
+        - "echo": []
 
 tl-06-missing-commands:
   name: "test-wrapper"
@@ -59,5 +54,4 @@ tl-08-valid-minimal:
   commands:
     test:
       actions:
-        - executable: "echo"
-          args: []
+        - "echo": []

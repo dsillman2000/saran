@@ -5,8 +5,7 @@ OF-01:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - type: "str"
 
@@ -17,8 +16,7 @@ OF-02:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - name: "--json"
 
@@ -29,8 +27,7 @@ OF-03:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - name: "--json"
               flag_type: "float"
@@ -42,8 +39,7 @@ OF-04:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - name: "-json"
               flag_type: "str"
@@ -55,8 +51,7 @@ OF-05:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - name: "--bad_name"
               flag_type: "str"
@@ -68,8 +63,7 @@ OF-06:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - name: "--format"
               flag_type: "enum"
@@ -81,8 +75,7 @@ OF-07:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - name: "--format"
               flag_type: "enum"
@@ -95,8 +88,7 @@ OF-08:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - name: "--format"
               flag_type: "enum"
@@ -109,8 +101,7 @@ OF-09:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - name: "--verbose"
               flag_type: "bool"
@@ -123,8 +114,7 @@ OF-10:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - name: "--json"
               flag_type: "str"
@@ -138,8 +128,7 @@ OF-11:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - name: "--repo"
               flag_type: "str"
@@ -152,8 +141,7 @@ OF-12:
   commands:
     list:
       actions:
-        - executable: gh
-          args: []
+        - gh: []
           optional_flags:
             - name: "--json"
               flag_type: "str"

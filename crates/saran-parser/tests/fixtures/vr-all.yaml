@@ -10,8 +10,7 @@ vr-01-undeclared-var-in-action:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: ["$UNDECLARED"]  # VR-01: $UNDECLARED not in vars
+        - "gh": ["$UNDECLARED"]  # VR-01: $UNDECLARED not in vars
 
 vr-02-invalid-dollar-syntax:
   name: "test-wrapper"
@@ -22,8 +21,7 @@ vr-02-invalid-dollar-syntax:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: ["prefix$"]  # VR-02: bare $ with no valid var name
+        - "gh": ["prefix$"]  # VR-02: bare $ with no valid var name
 
 vr-03-digit-after-dollar:
   name: "test-wrapper"
@@ -34,8 +32,7 @@ vr-03-digit-after-dollar:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: ["$1VAR"]  # VR-03: digit immediately after $
+        - "gh": ["$1VAR"]  # VR-03: digit immediately after $
 
 vr-04-arg-in-help:
   name: "test-wrapper"
@@ -52,8 +49,7 @@ vr-04-arg-in-help:
           type: str
           required: true
       actions:
-        - executable: "gh"
-          args: []
+        - "gh": []
 
 vr-05-undeclared-var-in-help:
   name: "test-wrapper"
@@ -65,8 +61,7 @@ vr-05-undeclared-var-in-help:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: []
+        - "gh": []
 
 vr-06-valid-references:
   name: "test-wrapper"
@@ -78,5 +73,4 @@ vr-06-valid-references:
   commands:
     list:
       actions:
-        - executable: "gh"
-          args: ["$REPO"]  # Valid: $REPO is declared in vars
+        - "gh": ["$REPO"]  # Valid: $REPO is declared in vars

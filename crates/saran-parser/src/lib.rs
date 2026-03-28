@@ -715,11 +715,14 @@ fn validate_var_declaration(
 /// Validate all commands in the `commands:` section.
 ///
 /// Checks:
-/// - Each command name is a valid format (alphanumeric and hyphens, no leading/trailing)
-/// - Each command has `actions` section that is non-empty
-/// - All actions have valid structure
+/// Validate all command definitions.
 ///
-/// Updates context.errors and populates context.declared_commands
+/// Checks:
+/// * Each command name matches the required format (alphanumeric and hyphens)
+/// * Each command has at least one action
+/// * All actions have valid structure
+///
+/// Updates `context.errors` and populates `context.declared_commands` with valid command names.
 pub fn validate_commands(
     commands: &std::collections::BTreeMap<String, saran_types::Command>,
     context: &mut ValidationContext,
@@ -799,6 +802,16 @@ fn validate_executable_name(name: &str) -> Result<(), String> {
 }
 
 /// Validate all optional flags in all actions across all commands.
+///
+/// Checks for each flag:
+/// * `name` and `flag_type` fields are present
+/// * Flag name starts with `--` and follows alphanumeric-with-hyphens format
+/// * Flag type is one of: `str`, `bool`, `int`, or `enum`
+/// * Enum type has non-empty `values` array
+/// * Bool type does not have `repeated: true`
+/// * No duplicate flag names within the same action
+///
+/// Updates `context.errors` with validation issues.
 pub fn validate_optional_flags_all(
     commands: &std::collections::BTreeMap<String, saran_types::Command>,
     context: &mut ValidationContext,
@@ -952,6 +965,17 @@ fn validate_enum_value(val: &str) -> Result<(), String> {
 }
 
 /// Validate all positional arguments in all commands.
+///
+/// For each command, validates:
+/// * Required fields (`name`, `var_name`, `arg_type`) are present
+/// * Argument type must be `str`
+/// * Argument name follows the format rules (alphanumeric and underscores)
+/// * No duplicate argument names within the same command
+/// * Variable names don't conflict with declared variables
+/// * Required arguments don't follow optional arguments (ordering constraint)
+/// * No prefix conflicts in variable names (e.g., ARG and ARG_SUFFIX)
+///
+/// Updates `context.errors` and populates `context.declared_args[command_name]` with valid argument variable names.
 pub fn validate_args_all(
     commands: &std::collections::BTreeMap<String, saran_types::Command>,
     context: &mut ValidationContext,
@@ -1337,6 +1361,53 @@ fn validate_requires(requires: &[saran_types::CliRequirement]) -> Vec<Validation
     errors
 }
 
+/// Validate a complete Saran wrapper YAML definition.
+///
+/// This is the main entry point for validation. It performs a multi-layer validation pipeline:
+///
+/// 1. **YAML Deserialization** — Parses the YAML string into a `WrapperDefinition`
+/// 2. **Phase 2A (Top-Level)** — Validates wrapper name, version, and commands existence
+/// 3. **Phase 2B (Field-Level)** — Validates in dependency order:
+///    * Variables declarations (names, format, conflicts)
+///    * Commands and actions (structure, names)
+///    * Optional flags (format, types, duplicates)
+///    * Positional arguments (types, ordering, conflicts)
+/// 4. **Phase 2C (Cross-Reference)** — Validates:
+///    * Variable references (`$VAR_NAME` tokens in action args and variable help text)
+///    * Requires section (CLI requirements, version constraints)
+///
+/// # Arguments
+///
+/// * `yaml_str` - The YAML wrapper definition as a string
+///
+/// # Returns
+///
+/// * `Ok(WrapperDefinition)` — Successfully parsed and validated wrapper definition
+/// * `Err(Vec<ValidationError>)` — List of all validation errors found (comprehensive, not first-fail)
+///
+/// # Example
+///
+/// ```ignore
+/// use saran_parser::validate_wrapper;
+///
+/// let yaml = r#"
+/// name: my-wrapper
+/// version: 1.0.0
+/// commands:
+///   list:
+///     actions:
+///       - executable: ls
+/// "#;
+///
+/// match validate_wrapper(yaml) {
+///     Ok(def) => println!("Valid wrapper: {}", def.name),
+///     Err(errors) => {
+///         for error in errors {
+///             println!("Validation error: {}", error);
+///         }
+///     }
+/// }
+/// ```
 pub fn validate_wrapper(
     yaml_str: &str,
 ) -> Result<saran_types::WrapperDefinition, Vec<ValidationError>> {

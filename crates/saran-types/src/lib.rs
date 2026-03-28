@@ -3,7 +3,7 @@
 //! This crate provides canonical Rust representations of wrapper YAML files.
 //! No parsing, validation, or code generation logic is present here — only data structures.
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::BTreeMap;
 
 /// A complete Saran wrapper definition, representing a single YAML wrapper file.
@@ -195,10 +195,10 @@ pub struct PositionalArg {
 
 /// A process invocation to execute as part of a command.
 ///
-/// Each action is a map with one required key (the executable name and its fixed argument array)
-/// and one optional key (`optional_flags`).
+/// Each action is serialized as a map with one required key (the executable name) whose value
+/// is the fixed argument array, and one optional key (`optional_flags`).
 ///
-/// Example:
+/// Example YAML:
 /// ```yaml
 /// actions:
 ///   - gh: [pr, list, -R, "$GH_REPO"]
@@ -207,11 +207,13 @@ pub struct PositionalArg {
 ///         type: str
 ///         help: "JSON output fields"
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+///
+/// The executable name (key) is resolved via PATH and must not contain `/` or `..`.
+/// Each element in the args array may contain `$VAR_NAME` substitution references.
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct Action {
-    /// The executable name (e.g., `gh`, `redis-cli`) and its fixed argument array.
+    /// The executable name (e.g., `gh`, `redis-cli`).
     /// The executable is resolved via PATH; it must not contain `/` or `..`.
-    /// Each element in the array may contain `$VAR_NAME` substitution references.
     pub executable: String,
 
     /// The fixed argument array for this executable.
@@ -223,6 +225,55 @@ pub struct Action {
     /// When supplied, flags are appended to the action's argument array at execution time.
     #[serde(default)]
     pub optional_flags: Vec<OptionalFlag>,
+}
+
+impl<'de> Deserialize<'de> for Action {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let map =
+            serde_yaml::Mapping::deserialize(deserializer).map_err(serde::de::Error::custom)?;
+
+        let mut executable: Option<String> = None;
+        let mut args: Option<Vec<String>> = None;
+        let mut optional_flags: Vec<OptionalFlag> = Vec::new();
+
+        for (key, value) in map.iter() {
+            let key_str = key
+                .as_str()
+                .ok_or_else(|| serde::de::Error::custom("action key must be a string"))?;
+
+            if key_str == "optional_flags" {
+                // Deserialize optional_flags
+                optional_flags =
+                    serde_yaml::from_value(value.clone()).map_err(serde::de::Error::custom)?;
+            } else {
+                // This is the executable key
+                if executable.is_some() {
+                    return Err(serde::de::Error::custom(
+                        "action must have exactly one executable key",
+                    ));
+                }
+                executable = Some(key_str.to_string());
+                args =
+                    Some(serde_yaml::from_value(value.clone()).map_err(serde::de::Error::custom)?);
+            }
+        }
+
+        let executable = executable.ok_or_else(|| {
+            serde::de::Error::custom("action must have an executable key (e.g., 'gh: [...]')")
+        })?;
+        let args = args.ok_or_else(|| {
+            serde::de::Error::custom("action's executable value must be an array of strings")
+        })?;
+
+        Ok(Action {
+            executable,
+            args,
+            optional_flags,
+        })
+    }
 }
 
 /// An optional flag definition.

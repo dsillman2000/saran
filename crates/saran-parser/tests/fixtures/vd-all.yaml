@@ -5,8 +5,7 @@ VD-01:
   commands:
     test:
       actions:
-        - executable: echo
-          args: []
+        - echo: []
   vars:
     - name: "123VAR"
       required: true
@@ -18,8 +17,7 @@ VD-02:
   commands:
     test:
       actions:
-        - executable: echo
-          args: []
+        - echo: []
   vars:
     - name: "VAR-NAME"
       required: true
@@ -31,8 +29,7 @@ VD-03:
   commands:
     test:
       actions:
-        - executable: echo
-          args: []
+        - echo: []
   vars:
     - name: "MY_VAR"
       required: true
@@ -46,8 +43,7 @@ VD-04:
   commands:
     test:
       actions:
-        - executable: echo
-          args: []
+        - echo: []
   vars:
     - name: "MY_VAR"
       required: true
@@ -60,8 +56,7 @@ VD-05:
   commands:
     test:
       actions:
-        - executable: echo
-          args: []
+        - echo: []
   vars:
     - name: "MY_VAR"
 
@@ -72,8 +67,7 @@ VD-06:
   commands:
     test:
       actions:
-        - executable: echo
-          args: []
+        - echo: []
   vars:
     - name: "VAR"
       required: true
@@ -87,8 +81,7 @@ VD-07:
   commands:
     test:
       actions:
-        - executable: echo
-          args: []
+        - echo: []
   vars:
     - name: "MY_VAR"
       required: true

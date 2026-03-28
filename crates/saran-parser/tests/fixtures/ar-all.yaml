@@ -8,8 +8,7 @@ AR-01:
         - var_name: FOO
           arg_type: "str"
       actions:
-        - executable: echo
-          args: []
+        - echo: []
 
 # AR-02: Missing `var_name` in arg
 AR-02:
@@ -21,8 +20,7 @@ AR-02:
         - name: foo
           arg_type: "str"
       actions:
-        - executable: echo
-          args: []
+        - echo: []
 
 # AR-03: Missing `type` in arg
 AR-03:
@@ -34,8 +32,7 @@ AR-03:
         - name: foo
           var_name: FOO
       actions:
-        - executable: echo
-          args: []
+        - echo: []
 
 # AR-04: Invalid arg type (not str)
 AR-04:
@@ -48,8 +45,7 @@ AR-04:
           var_name: FOO
           arg_type: "int"
       actions:
-        - executable: echo
-          args: []
+        - echo: []
 
 # AR-05: Invalid arg name format (contains space)
 AR-05:
@@ -62,8 +58,7 @@ AR-05:
           var_name: FOO
           arg_type: "str"
       actions:
-        - executable: echo
-          args: []
+        - echo: []
 
 # AR-06: Duplicate arg names and var_names
 AR-06:
@@ -79,8 +74,7 @@ AR-06:
           var_name: BAR
           arg_type: "str"
       actions:
-        - executable: echo
-          args: []
+        - echo: []
 
 # AR-07: Arg `var_name` conflicts with var
 AR-07:
@@ -96,8 +90,7 @@ AR-07:
           var_name: GH_REPO
           arg_type: "str"
       actions:
-        - executable: echo
-          args: []
+        - echo: []
 
 # AR-08: Required arg after optional arg
 AR-08:
@@ -115,8 +108,7 @@ AR-08:
           arg_type: "str"
           required: true
       actions:
-        - executable: echo
-          args: []
+        - echo: []
 
 # AR-09: Prefix `var_name` conflict
 AR-09:
@@ -132,8 +124,7 @@ AR-09:
           var_name: FOO_BAR
           arg_type: "str"
       actions:
-        - executable: echo
-          args: []
+        - echo: []
 
 # AR-10: Valid argument declarations
 AR-10:
@@ -151,5 +142,4 @@ AR-10:
           arg_type: "str"
           required: false
       actions:
-        - executable: gh
-          args: ["issue", "view"]
+        - gh: ["issue", "view"]

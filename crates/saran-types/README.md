@@ -24,6 +24,8 @@ These types are consumed by:
 
 This crate contains **only type definitions and doc comments**. No business logic, validation, parsing, or code generation. Pure data structures with `serde` serialization support.
 
+**Exception:** The `Action` type uses a **custom `serde` deserializer** to transparently convert the spec-compliant YAML format (where the executable name is a dynamic map key) into the internal field structure. See `src/lib.rs` lines 230-277 for implementation details.
+
 ## Dependency Graph
 
 ```mermaid
