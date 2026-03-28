@@ -127,4 +127,34 @@ Examples are organized by the CLI they wrap under `spec/examples/`.
 
 ## Status
 
-This branch (`specification`) contains the design specification only. No implementation exists yet.
+This branch (`impl`) contains the Rust implementation of the Saran framework. The codebase is organized as a multi-crate workspace:
+
+| Crate                     | Purpose                                                                             |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| `crates/saran`            | Main CLI for installing, managing, and validating wrappers                          |
+| `crates/saran-types`      | Core type definitions (WrapperDefinition, Command, Action, etc.) with serde support |
+| `crates/saran-parser`     | YAML parsing and token parsing; validates wrapper files against the specification   |
+| `crates/saran-core`       | Runtime types and error handling for generated wrappers                             |
+| `crates/saran-codegen`    | Transforms validated WrapperDefinition into Rust source code (clap CLI generation)  |
+| `crates/saran-validation` | Additional validation and constraint checking                                       |
+
+All implementations follow the **specification** as the source of truth. See `spec/INDEX.md` for the complete specification map and test coverage.
+
+### Build & Test
+
+```bash
+# Build entire workspace
+cargo build
+
+# Run all tests (71 parser tests + 6 type tests)
+cargo test --lib
+
+# Run tests for a specific crate
+cargo test -p saran-parser
+cargo test -p saran-types
+
+# Lint and format
+cargo fmt
+cargo clippy
+pre-commit run --all-files
+```
