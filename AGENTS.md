@@ -21,18 +21,18 @@ This project follows a **specification-driven** development methodology within a
 
 ## Key Directories
 
-| Directory | Purpose |
-|-----------|---------|
-| `spec/` | All specification documents |
-| `crates/` | Core Rust implementation (six-crate design) |
-| `spec/saran-format.md` | YAML wrapper schema and execution model |
-| `spec/saran-cli.md` | User-facing CLI commands |
-| `spec/saran-env.md` | Environment variable resolution |
-| `spec/saran-conventions.md` | Wrapper naming conventions |
-| `spec/saran-codegen.md` | YAML → Rust code generation |
-| `spec/tests/unit/` | Unit test specifications (108 tests) |
-| `spec/tests/integration/` | Integration test scenarios |
-| `spec/examples/` | Example wrapper configurations |
+| Directory                   | Purpose                                     |
+| --------------------------- | ------------------------------------------- |
+| `spec/`                     | All specification documents                 |
+| `crates/`                   | Core Rust implementation (six-crate design) |
+| `spec/saran-format.md`      | YAML wrapper schema and execution model     |
+| `spec/saran-cli.md`         | User-facing CLI commands                    |
+| `spec/saran-env.md`         | Environment variable resolution             |
+| `spec/saran-conventions.md` | Wrapper naming conventions                  |
+| `spec/saran-codegen.md`     | YAML → Rust code generation                 |
+| `spec/tests/unit/`          | Unit test specifications (108 tests)        |
+| `spec/tests/integration/`   | Integration test scenarios                  |
+| `spec/examples/`            | Example wrapper configurations              |
 
 ## Specification Index
 
@@ -50,13 +50,13 @@ See [`spec/INDEX.md`](spec/INDEX.md) for the complete specification map, test co
 
 #### Unit Tests (spec/tests/unit/)
 
-| File | Tests | Coverage |
-|------|-------|----------|
-| 01-yaml-validation.md | 59 | YAML schema validation, error messages |
-| 02-token-parsing.md | 6 | `$VAR_NAME` token extraction |
-| 03-variable-resolution.md | 14 | Env.yaml priority chain resolution |
-| 04-substitution-resolution.md | 10 | Variable substitution in strings |
-| 05-argument-assembly.md | 19 | Child process argv construction |
+| File                          | Tests | Coverage                               |
+| ----------------------------- | ----- | -------------------------------------- |
+| 01-yaml-validation.md         | 59    | YAML schema validation, error messages |
+| 02-token-parsing.md           | 6     | `$VAR_NAME` token extraction           |
+| 03-variable-resolution.md     | 14    | Env.yaml priority chain resolution     |
+| 04-substitution-resolution.md | 10    | Variable substitution in strings       |
+| 05-argument-assembly.md       | 19    | Child process argv construction        |
 
 **Total: 108 unit tests**
 
@@ -83,6 +83,7 @@ Located in `spec/examples/`:
 - `greet.yaml` — Minimal example
 
 Example wrapper naming: `gh-pr.repo.ro.yaml` means:
+
 - `gh-pr` — wraps `gh pr`
 - `.repo` — repo-scoped (requires GH_REPO)
 - `.ro` — read-only
@@ -112,28 +113,28 @@ Check `README.md` or search for existing build scripts. If none exist, ask the u
 
 ### Memory Types
 
-| Type | Use For | Example |
-|------|---------|---------|
-| decision | Architecture/design choices | "Using Drizzle ORM over Prisma for type safety. See: src/db/schema.ts" |
-| learning | Codebase discoveries | "Auth tokens stored in httpOnly cookies, not localStorage. See: src/auth/session.ts" |
-| preference | User/project preferences | "User prefers functional components over class components" |
-| blocker | Known issues | "Websocket reconnection fails on Safari - tracking in issue #42" |
-| context | Feature/system info | "Payment integration uses Stripe in test mode. API keys in .env.local" |
-| pattern | Code patterns | "All API routes follow /api/v1/[resource]/[action] pattern. See: src/routes/" |
+| Type       | Use For                     | Example                                                                              |
+| ---------- | --------------------------- | ------------------------------------------------------------------------------------ |
+| decision   | Architecture/design choices | "Using Drizzle ORM over Prisma for type safety. See: src/db/schema.ts"               |
+| learning   | Codebase discoveries        | "Auth tokens stored in httpOnly cookies, not localStorage. See: src/auth/session.ts" |
+| preference | User/project preferences    | "User prefers functional components over class components"                           |
+| blocker    | Known issues                | "Websocket reconnection fails on Safari - tracking in issue #42"                     |
+| context    | Feature/system info         | "Payment integration uses Stripe in test mode. API keys in .env.local"               |
+| pattern    | Code patterns               | "All API routes follow /api/v1/[resource]/[action] pattern. See: src/routes/"        |
 
 ### Memory Scopes
 
 Use scopes to organize memories logically:
 
-| Scope | Use For |
-|-------|---------|
-| `project` | Project-wide decisions and patterns |
-| `user` | User-specific preferences |
-| `auth` | Authentication/authorization context |
-| `api` | API design decisions |
-| `database` | Database schema and query patterns |
-| `testing` | Testing strategies and known issues |
-| `deployment` | Deployment and infrastructure notes |
+| Scope        | Use For                              |
+| ------------ | ------------------------------------ |
+| `project`    | Project-wide decisions and patterns  |
+| `user`       | User-specific preferences            |
+| `auth`       | Authentication/authorization context |
+| `api`        | API design decisions                 |
+| `database`   | Database schema and query patterns   |
+| `testing`    | Testing strategies and known issues  |
+| `deployment` | Deployment and infrastructure notes  |
 
 ### Example Memory Workflow
 

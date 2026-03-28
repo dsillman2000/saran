@@ -14,12 +14,12 @@ filename alone without opening the file.
 
 The four parts are:
 
-| Part | Required | Description |
-|---|---|---|
-| `cli-fragment` | Yes | Identifies the CLI and subcommand(s) being wrapped |
-| `scope` | No | Names the most-derived resource that is operator-fixed via `vars:` |
-| `ro` or `rw` | Yes | Declares the access level granted to the caller |
-| `quota` | No | Present only when one or more `commands:` are quota-bounded via `quotas:` |
+| Part           | Required | Description                                                               |
+| -------------- | -------- | ------------------------------------------------------------------------- |
+| `cli-fragment` | Yes      | Identifies the CLI and subcommand(s) being wrapped                        |
+| `scope`        | No       | Names the most-derived resource that is operator-fixed via `vars:`        |
+| `ro` or `rw`   | Yes      | Declares the access level granted to the caller                           |
+| `quota`        | No       | Present only when one or more `commands:` are quota-bounded via `quotas:` |
 
 The separator between all parts is `.` (dot). Wrapper filenames use this name directly with a
 `.yaml` extension appended: `<name>.yaml`.
@@ -36,22 +36,22 @@ natural naming of the underlying CLI.
 
 **Examples:**
 
-| CLI command | Fragment |
-|---|---|
-| `gh pr` | `gh-pr` |
-| `gh issue` | `gh-issue` |
-| `gh run` | `gh-run` |
-| `gh release` | `gh-release` |
-| `gh search` | `gh-search` |
-| `gh pr comment` | `gh-pr-comment` |
-| `gh issue create` | `gh-issue-create` |
-| `gh issue comment` | `gh-issue-comment` |
-| `glab mr` | `glab-mr` |
-| `glab issue` | `glab-issue` |
+| CLI command         | Fragment            |
+| ------------------- | ------------------- |
+| `gh pr`             | `gh-pr`             |
+| `gh issue`          | `gh-issue`          |
+| `gh run`            | `gh-run`            |
+| `gh release`        | `gh-release`        |
+| `gh search`         | `gh-search`         |
+| `gh pr comment`     | `gh-pr-comment`     |
+| `gh issue create`   | `gh-issue-create`   |
+| `gh issue comment`  | `gh-issue-comment`  |
+| `glab mr`           | `glab-mr`           |
+| `glab issue`        | `glab-issue`        |
 | `glab issue create` | `glab-issue-create` |
-| `glab issue note` | `glab-issue-note` |
-| `glab ci` | `glab-ci` |
-| `glab release` | `glab-release` |
+| `glab issue note`   | `glab-issue-note`   |
+| `glab ci`           | `glab-ci`           |
+| `glab release`      | `glab-release`      |
 
 When a wrapper focuses on a specific write operation (relevant for `-rw` wrappers), the
 write operation name is appended to the fragment rather than placed elsewhere in the name.
@@ -72,17 +72,17 @@ Only name the deepest fixed resource.
 
 **Common scope tokens:**
 
-| Token | Variables implied | Example |
-|---|---|---|
-| *(absent)* | none fixed | `gh-pr.ro`, `glab-mr.ro` |
-| `repo` | `GH_REPO` / `GLAB_REPO` | `gh-pr.repo.ro`, `glab-mr.repo.ro` |
-| `pr` | `GH_REPO` + `GH_PR` | `gh-pr-comment.pr.rw.quota` |
-| `issue` | `GH_REPO` + `GH_ISSUE` / `GLAB_REPO` + `GLAB_ISSUE` | `gh-issue-comment.issue.rw.quota`, `glab-issue-note.issue.rw.quota` |
-| `branch` | `GLAB_REPO` + `GLAB_BRANCH` | `glab-ci.branch.ro` |
-| `run` | `GH_REPO` + `GH_RUN_ID` | `gh-run-view.run.ro` *(hypothetical)* |
-| `key` | `REDIS_KEY` *(plus host/port/db)* | `redis-cli-string-set.key.rw.quota` |
-| `prefix` | `REDIS_KEY_PREFIX` *(plus host/port/db)* | `redis-cli-key-meta.prefix.ro` |
-| `db` | `REDIS_DB` *(plus host/port)* | `redis-cli-info.db.ro` |
+| Token      | Variables implied                                   | Example                                                             |
+| ---------- | --------------------------------------------------- | ------------------------------------------------------------------- |
+| _(absent)_ | none fixed                                          | `gh-pr.ro`, `glab-mr.ro`                                            |
+| `repo`     | `GH_REPO` / `GLAB_REPO`                             | `gh-pr.repo.ro`, `glab-mr.repo.ro`                                  |
+| `pr`       | `GH_REPO` + `GH_PR`                                 | `gh-pr-comment.pr.rw.quota`                                         |
+| `issue`    | `GH_REPO` + `GH_ISSUE` / `GLAB_REPO` + `GLAB_ISSUE` | `gh-issue-comment.issue.rw.quota`, `glab-issue-note.issue.rw.quota` |
+| `branch`   | `GLAB_REPO` + `GLAB_BRANCH`                         | `glab-ci.branch.ro`                                                 |
+| `run`      | `GH_REPO` + `GH_RUN_ID`                             | `gh-run-view.run.ro` _(hypothetical)_                               |
+| `key`      | `REDIS_KEY` _(plus host/port/db)_                   | `redis-cli-string-set.key.rw.quota`                                 |
+| `prefix`   | `REDIS_KEY_PREFIX` _(plus host/port/db)_            | `redis-cli-key-meta.prefix.ro`                                      |
+| `db`       | `REDIS_DB` _(plus host/port)_                       | `redis-cli-info.db.ro`                                              |
 
 Scope tokens are always lowercase and match a natural resource name, not a variable name.
 
@@ -92,10 +92,10 @@ Scope tokens are always lowercase and match a natural resource name, not a varia
 
 Declares the access level the wrapper grants to its caller.
 
-| Suffix | Meaning |
-|---|---|
-| `.ro` | Read-only. No commands in the wrapper mutate state. |
-| `.rw` | Read-write. At least one command in the wrapper mutates state. |
+| Suffix | Meaning                                                        |
+| ------ | -------------------------------------------------------------- |
+| `.ro`  | Read-only. No commands in the wrapper mutate state.            |
+| `.rw`  | Read-write. At least one command in the wrapper mutates state. |
 
 `.ro` and `.rw` are **always present** — never omit them. A wrapper with no scope token
 still carries `.ro` or `.rw`: `gh-pr.ro`, `gh-run.ro`.
@@ -109,6 +109,7 @@ write commands. It is only meaningful on `.rw` wrappers: `.ro.quota` is not a va
 combination.
 
 `.quota` signals to operators that:
+
 1. The wrapper allows writes but they are bounded.
 2. A quota variable (e.g. `GH_ISSUE_CREATE_QUOTA`) must be configured in `saran env`.
 3. Quota state must be reset between sessions with `saran quotas reset <name>`.
@@ -117,29 +118,29 @@ combination.
 
 ## Examples
 
-| Name | Interpretation |
-|---|---|
-| `gh-pr.ro` | `gh pr`, ambient scope, read-only |
-| `gh-pr.repo.ro` | `gh pr`, repo fixed by operator, read-only |
-| `gh-pr-comment.pr.rw.quota` | `gh pr comment`, repo+PR fixed by operator, writes allowed, quota-bounded |
-| `gh-issue.ro` | `gh issue`, ambient scope, read-only |
-| `gh-issue.repo.ro` | `gh issue`, repo fixed by operator, read-only |
-| `gh-issue-create.repo.rw.quota` | `gh issue create`, repo fixed by operator, writes allowed, quota-bounded |
+| Name                              | Interpretation                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------------- |
+| `gh-pr.ro`                        | `gh pr`, ambient scope, read-only                                               |
+| `gh-pr.repo.ro`                   | `gh pr`, repo fixed by operator, read-only                                      |
+| `gh-pr-comment.pr.rw.quota`       | `gh pr comment`, repo+PR fixed by operator, writes allowed, quota-bounded       |
+| `gh-issue.ro`                     | `gh issue`, ambient scope, read-only                                            |
+| `gh-issue.repo.ro`                | `gh issue`, repo fixed by operator, read-only                                   |
+| `gh-issue-create.repo.rw.quota`   | `gh issue create`, repo fixed by operator, writes allowed, quota-bounded        |
 | `gh-issue-comment.issue.rw.quota` | `gh issue comment`, repo+issue fixed by operator, writes allowed, quota-bounded |
-| `gh-release.repo.ro` | `gh release`, repo fixed by operator, read-only |
-| `gh-run.ro` | `gh run`, ambient scope, read-only |
-| `gh-run.repo.ro` | `gh run`, repo fixed by operator, read-only |
-| `gh-search.repo.ro` | `gh search`, repo fixed by operator, read-only |
-| `glab-mr.ro` | `glab mr`, ambient scope, read-only |
-| `glab-mr.repo.ro` | `glab mr`, repo fixed by operator, read-only |
-| `glab-issue.ro` | `glab issue`, ambient scope, read-only |
-| `glab-issue.repo.ro` | `glab issue`, repo fixed by operator, read-only |
-| `glab-issue-create.repo.rw.quota` | `glab issue create`, repo fixed by operator, writes allowed, quota-bounded |
-| `glab-issue-note.issue.rw.quota` | `glab issue note`, repo+issue fixed by operator, writes allowed, quota-bounded |
-| `glab-ci.ro` | `glab ci`, ambient scope, read-only |
-| `glab-ci.repo.ro` | `glab ci`, repo fixed by operator, read-only |
-| `glab-ci.branch.ro` | `glab ci`, repo+branch fixed by operator, read-only |
-| `glab-release.repo.ro` | `glab release`, repo fixed by operator, read-only |
+| `gh-release.repo.ro`              | `gh release`, repo fixed by operator, read-only                                 |
+| `gh-run.ro`                       | `gh run`, ambient scope, read-only                                              |
+| `gh-run.repo.ro`                  | `gh run`, repo fixed by operator, read-only                                     |
+| `gh-search.repo.ro`               | `gh search`, repo fixed by operator, read-only                                  |
+| `glab-mr.ro`                      | `glab mr`, ambient scope, read-only                                             |
+| `glab-mr.repo.ro`                 | `glab mr`, repo fixed by operator, read-only                                    |
+| `glab-issue.ro`                   | `glab issue`, ambient scope, read-only                                          |
+| `glab-issue.repo.ro`              | `glab issue`, repo fixed by operator, read-only                                 |
+| `glab-issue-create.repo.rw.quota` | `glab issue create`, repo fixed by operator, writes allowed, quota-bounded      |
+| `glab-issue-note.issue.rw.quota`  | `glab issue note`, repo+issue fixed by operator, writes allowed, quota-bounded  |
+| `glab-ci.ro`                      | `glab ci`, ambient scope, read-only                                             |
+| `glab-ci.repo.ro`                 | `glab ci`, repo fixed by operator, read-only                                    |
+| `glab-ci.branch.ro`               | `glab ci`, repo+branch fixed by operator, read-only                             |
+| `glab-release.repo.ro`            | `glab release`, repo fixed by operator, read-only                               |
 
 ---
 

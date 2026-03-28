@@ -32,7 +32,7 @@ graph TD
     B["saran-parser<br/>saran-core<br/>(consume types)"]
     C["saran-validation<br/>saran-codegen<br/>(transform types)"]
     D["saran CLI<br/>(orchestrates all)"]
-    
+
     A --> B
     B --> C
     C --> D

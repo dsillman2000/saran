@@ -35,30 +35,33 @@ Every action in a Saran wrapper's `actions:` list is executed as a **direct proc
 ## Top-Level Structure
 
 ```yaml
-name: <string>             # Required. The name of the generated CLI binary.
-version: <string>          # Required. Semantic version of this wrapper (e.g. "1.0.0").
-help: <string>             # Optional. Top-level help/about text shown by --help.
-requires:                  # Optional. Version constraints on external CLIs.
+name: <string> # Required. The name of the generated CLI binary.
+version: <string> # Required. Semantic version of this wrapper (e.g. "1.0.0").
+help: <string> # Optional. Top-level help/about text shown by --help.
+requires: # Optional. Version constraints on external CLIs.
   - ...
-vars:                      # Optional. Declares environment variables this wrapper depends on.
+vars: # Optional. Declares environment variables this wrapper depends on.
   - ...
-commands:                  # Required. Named subcommands exposed by the wrapper.
-  <command-name>:
-    ...
+commands: # Required. Named subcommands exposed by the wrapper.
+  <command-name>: ...
 ```
 
 ### `name`
+
 **Required.** The name of the wrapper CLI. Used as the program name in `clap`'s help output.
 
 ### `version`
+
 **Required.** The semantic version of this wrapper in `MAJOR.MINOR.PATCH` format (e.g. `"1.0.0"`). Must conform to [SemVer 2.0.0](https://semver.org/). Exposed via `--version` in the generated CLI and displayed by `saran list`.
 
 > **Note:** This version tracks the wrapper definition itself, not the underlying CLI being wrapped. Increment it when the wrapper's commands, flags, or vars change in a meaningful way.
 
 ### `help`
+
 **Optional.** A short description of the wrapper shown in top-level `--help` output.
 
 ### `requires`
+
 **Optional.** A list of version constraints on external CLIs that must be satisfied for the wrapper to function correctly. Each entry declares one CLI dependency with its expected version range. Saran checks these constraints at validate time (hard error) and at list time (soft warning).
 
 ```yaml
@@ -73,24 +76,24 @@ requires:
 
 #### `requires` entry fields
 
-| Field | Required | Description |
-|---|---|---|
-| `cli` | ✅ | The executable name to check. Used as a human-readable label in diagnostics and as the default probe target (`[<cli>, --version]`). Must satisfy `[a-z0-9_-]+`. |
-| `version` | ✅ | A semver constraint string. Supports `>=`, `>`, `<=`, `<`, `=` operators. Multiple constraints may be space-separated to form a range (e.g. `">=1.0.0 <3.0.0"`). Must match at least one resolved version of the CLI on the user's system. |
-| `version_probe` | — | Override the command used to query the CLI's version. An array of strings executed via non-shell exec. Defaults to `[<cli>, --version]`. Both stdout and stderr are captured and searched for a version string. |
-| `version_pattern` | — | A regex with exactly one capture group used to extract the version string from the probe output. Defaults to matching the first occurrence of `\d+\.\d+\.\d+[\w.-]*` anywhere in stdout or stderr. |
+| Field             | Required | Description                                                                                                                                                                                                                                |
+| ----------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cli`             | ✅       | The executable name to check. Used as a human-readable label in diagnostics and as the default probe target (`[<cli>, --version]`). Must satisfy `[a-z0-9_-]+`.                                                                            |
+| `version`         | ✅       | A semver constraint string. Supports `>=`, `>`, `<=`, `<`, `=` operators. Multiple constraints may be space-separated to form a range (e.g. `">=1.0.0 <3.0.0"`). Must match at least one resolved version of the CLI on the user's system. |
+| `version_probe`   | —        | Override the command used to query the CLI's version. An array of strings executed via non-shell exec. Defaults to `[<cli>, --version]`. Both stdout and stderr are captured and searched for a version string.                            |
+| `version_pattern` | —        | A regex with exactly one capture group used to extract the version string from the probe output. Defaults to matching the first occurrence of `\d+\.\d+\.\d+[\w.-]*` anywhere in stdout or stderr.                                         |
 
 #### Version constraint syntax
 
 The `version` field accepts standard semver comparison operators:
 
-| Constraint | Meaning |
-|---|---|
-| `">=2.0.0"` | Version 2.0.0 or higher |
-| `">2.0.0"` | Strictly greater than 2.0.0 |
-| `"<=2.0.0"` | Version 2.0.0 or lower |
-| `"<2.0.0"` | Strictly less than 2.0.0 |
-| `"=2.0.0"` | Exactly version 2.0.0 |
+| Constraint         | Meaning                                              |
+| ------------------ | ---------------------------------------------------- |
+| `">=2.0.0"`        | Version 2.0.0 or higher                              |
+| `">2.0.0"`         | Strictly greater than 2.0.0                          |
+| `"<=2.0.0"`        | Version 2.0.0 or lower                               |
+| `"<2.0.0"`         | Strictly less than 2.0.0                             |
+| `"=2.0.0"`         | Exactly version 2.0.0                                |
 | `">=1.0.0 <3.0.0"` | At least 1.0.0 and below 3.0.0 (space-separated AND) |
 
 #### Unknown version handling
@@ -100,9 +103,8 @@ If the probe command fails (executable not in PATH, non-zero exit, or no version
 - `saran validate` — hard error: prints the probe failure reason and exits non-zero
 - `saran list` — soft warning: shows `⚠ unknown (requires <constraint>)` next to the wrapper
 
-
-
 ### `vars`
+
 **Optional.** A list of environment variable declarations this wrapper depends on. Each entry declares one variable, its optionality, and an optional default. Variables declared here are resolved at startup from a layered configuration chain and injected into the child process environment before every invocation. The caller cannot influence these values.
 
 ```yaml
@@ -117,12 +119,12 @@ vars:
 
 #### `vars` entry fields
 
-| Field | Required | Description |
-|---|---|---|
-| `name` | ✅ | The environment variable name. Must satisfy `[A-Za-z_][A-Za-z0-9_]*`. |
-| `required` | ✅ | `true` if the variable must be provided by the resolution chain; `false` if the `default:` is sufficient. Mutually exclusive with `default:`. |
-| `default` | — | A literal string value used as a fallback if no higher-priority source provides the variable. Mutually exclusive with `required: true`. |
-| `help` | — | A short description shown in `saran env` output. |
+| Field      | Required | Description                                                                                                                                   |
+| ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`     | ✅       | The environment variable name. Must satisfy `[A-Za-z_][A-Za-z0-9_]*`.                                                                         |
+| `required` | ✅       | `true` if the variable must be provided by the resolution chain; `false` if the `default:` is sufficient. Mutually exclusive with `default:`. |
+| `default`  | —        | A literal string value used as a fallback if no higher-priority source provides the variable. Mutually exclusive with `required: true`.       |
+| `help`     | —        | A short description shown in `saran env` output.                                                                                              |
 
 > **Note:** `required: true` and `default:` are mutually exclusive. A var with `required: true` must be set somewhere in the resolution chain — if it is not, Saran exits at startup with a descriptive error. A var with a `default:` is always satisfiable and never causes a startup error.
 
@@ -145,11 +147,12 @@ error: required variable `GH_TOKEN` is not set.
 
 > See [saran-env.md](saran-env.md) for the full `saran env` command reference.
 
-> **Security note:** Because Saran uses direct process invocation and callers can only supply values through `optional_flags`, resolved `vars:` values are guaranteed at invocation time — the caller cannot override them. The host environment contributes to resolution *before* Saran launches, not during invocation.
+> **Security note:** Because Saran uses direct process invocation and callers can only supply values through `optional_flags`, resolved `vars:` values are guaranteed at invocation time — the caller cannot override them. The host environment contributes to resolution _before_ Saran launches, not during invocation.
 >
 > **Warning:** `~/.local/share/saran/env.yaml` is stored as plaintext. Do not use `saran env` to store secrets such as API tokens or credentials. For secrets, declare the variable as `required: true` (no `default:`) and set it in your host environment via your shell profile, a credential manager, or a secrets tool. This keeps secrets out of saran's configuration files entirely.
 
 ### `quotas`
+
 **Optional.** A list of quota declarations that bound write operations. Each entry declares one command as quota-guarded, limiting how many times it can be executed within a session.
 
 ```yaml
@@ -162,14 +165,15 @@ quotas:
 
 #### `quotas` entry fields
 
-| Field | Required | Description |
-|---|---|---|
-| `command` | ✅ | The name of the command to quota (must match a key in `commands:`). |
-| `limit` | ✅ | The maximum number of executions allowed. Can be a literal integer or a `$VAR_NAME` reference to a variable that holds the limit value. |
+| Field     | Required | Description                                                                                                                             |
+| --------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `command` | ✅       | The name of the command to quota (must match a key in `commands:`).                                                                     |
+| `limit`   | ✅       | The maximum number of executions allowed. Can be a literal integer or a `$VAR_NAME` reference to a variable that holds the limit value. |
 
 > **Note:** A command with quota enforcement is only valid in `.rw` wrappers. Quota state is tracked in `~/.local/share/saran/quotas.yaml` and must be reset between sessions with `saran quotas reset`.
 
 ### `commands`
+
 **Required.** A map of subcommand names to their definitions. Each key becomes a subcommand in the generated `clap` CLI. See [Command Definition](#command-definition) below.
 
 ---
@@ -179,24 +183,27 @@ quotas:
 ```yaml
 commands:
   <command-name>:
-    help: <string>             # Optional. Per-command help text.
-    args:                      # Optional. Positional arguments the caller must/may supply.
+    help: <string> # Optional. Per-command help text.
+    args: # Optional. Positional arguments the caller must/may supply.
       - ...
-    actions:                   # Required. Ordered list of process invocations to execute.
-      - <executable>: [...]    # Required. Executable key with its fixed argument array.
-        optional_flags:        # Optional. Flags the caller may pass to this specific action.
+    actions: # Required. Ordered list of process invocations to execute.
+      - <executable>: [...] # Required. Executable key with its fixed argument array.
+        optional_flags: # Optional. Flags the caller may pass to this specific action.
           - ...
 ```
 
 ### `help`
+
 **Optional.** A short description of this subcommand, shown in `--help` output for the wrapper.
 
 ### `args`
+
 **Optional.** A list of positional arguments the caller may supply when invoking this subcommand. Positional args are declared in the order `clap` will expect them on the command line. Their values are injected into `actions` entries via `$VAR_NAME` substitution.
 
 See [Positional Argument Definition](#positional-argument-definition) below.
 
 ### `actions`
+
 **Required.** An ordered list of process invocations to execute when this subcommand is called. Each entry is a YAML map with one required key (the executable name, whose value is the fixed argument array) and one optional key (`optional_flags:`). Actions are executed sequentially; if any action exits non-zero, execution halts immediately.
 
 ```yaml
@@ -278,24 +285,26 @@ commands:
 
 ```yaml
 optional_flags:
-  - name: <string>         # Required. The flag name as exposed in the saran CLI (e.g. --json).
-    type: <type>           # Required. One of: str, bool, int, enum.
-    repeated: <bool>       # Optional. Allow the flag to be supplied multiple times. Defaults to false.
-    help: <string>         # Optional. Description shown in --help for this flag.
-    passes_as: <string>    # Optional. The flag name passed to the underlying CLI. Defaults to `name`.
+  - name: <string> # Required. The flag name as exposed in the saran CLI (e.g. --json).
+    type: <type> # Required. One of: str, bool, int, enum.
+    repeated: <bool> # Optional. Allow the flag to be supplied multiple times. Defaults to false.
+    help: <string> # Optional. Description shown in --help for this flag.
+    passes_as: <string> # Optional. The flag name passed to the underlying CLI. Defaults to `name`.
 ```
 
 ### `name`
+
 **Required.** The flag name as it appears in the generated `clap` CLI. Must begin with `--`. The remainder must consist only of lowercase ASCII letters (`a–z`), digits (`0–9`), and hyphens (`-`), with no consecutive hyphens and no trailing hyphen (e.g., `--json`, `--failed-only`). Underscores and spaces are not valid. This matches `clap`'s long-flag name constraints.
 
 ### `type`
+
 **Required.** The value type for this flag. Saran supports four types:
 
-| Type | `clap` mapping | Child argv behavior |
-|------|----------------|---------------------|
-| `str` | `ArgAction::Set` | Appends two elements: the flag name (or `passes_as`) and the caller-supplied string value. |
-| `bool` | `ArgAction::SetTrue` | A presence flag — no value is accepted. Appends one element: the flag name (or `passes_as`) only. |
-| `int` | `ArgAction::Set` + integer parser | Accepts an integer value; `clap` rejects non-integer input before invocation. Appends two elements: the flag name (or `passes_as`) and the integer rendered as a decimal string. |
+| Type   | `clap` mapping                      | Child argv behavior                                                                                                                                                                                                             |
+| ------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `str`  | `ArgAction::Set`                    | Appends two elements: the flag name (or `passes_as`) and the caller-supplied string value.                                                                                                                                      |
+| `bool` | `ArgAction::SetTrue`                | A presence flag — no value is accepted. Appends one element: the flag name (or `passes_as`) only.                                                                                                                               |
+| `int`  | `ArgAction::Set` + integer parser   | Accepts an integer value; `clap` rejects non-integer input before invocation. Appends two elements: the flag name (or `passes_as`) and the integer rendered as a decimal string.                                                |
 | `enum` | `ArgAction::Set` + `PossibleValues` | Accepts only one of the values listed in the required sibling field `values:`. `clap` rejects anything outside that list before invocation. Appends two elements: the flag name (or `passes_as`) and the caller-supplied value. |
 
 When `type: enum` is used, a `values:` field is **required** on the same flag entry:
@@ -319,6 +328,7 @@ When `type: enum` is used, a `values:` field is **required** on the same flag en
 `values:` must be a non-empty list of non-empty strings. Each value must satisfy `[a-z0-9][a-z0-9_-]*` (lowercase, no spaces). `values:` is a validation error on any type other than `enum`.
 
 ### `repeated`
+
 **Optional.** Defaults to `false`. When `true`, the flag may be supplied multiple times by the caller. Each occurrence is collected independently and appended to the action's argument array in the order supplied.
 
 - Maps to `ArgAction::Append` in `clap` instead of `ArgAction::Set`.
@@ -342,9 +352,11 @@ When `type: enum` is used, a `values:` field is **required** on the same flag en
 ```
 
 ### `help`
+
 **Optional.** A short description of the flag, shown in `clap`'s `--help` output for the subcommand.
 
 ### `passes_as`
+
 **Optional.** When present, this value is used as the flag name in the underlying CLI invocation instead of `name`. This allows the saran-facing interface to use a different (e.g., more descriptive) name than the underlying CLI's flag.
 
 - Must begin with `--`.
@@ -365,29 +377,35 @@ When the caller passes `--fields title,body`, Saran appends `--json` and `title,
 
 ```yaml
 args:
-  - name: <string>        # Required. The positional name shown in clap help/usage (e.g. "name").
-    var_name: <string>    # Required. The substitution variable referenced in action via $VAR_NAME.
-    type: str             # Required. Must be `str` in v1.
-    required: <bool>      # Optional. Whether the caller must supply this argument. Defaults to true.
-    help: <string>        # Optional. Description shown in --help for this subcommand.
+  - name: <string> # Required. The positional name shown in clap help/usage (e.g. "name").
+    var_name: <string> # Required. The substitution variable referenced in action via $VAR_NAME.
+    type: str # Required. Must be `str` in v1.
+    required: <bool> # Optional. Whether the caller must supply this argument. Defaults to true.
+    help: <string> # Optional. Description shown in --help for this subcommand.
 ```
 
 ### `name`
+
 **Required.** The display name for this positional argument in `clap`'s usage and help output (e.g. `<name>`). Must consist only of lowercase ASCII letters (`a–z`), digits (`0–9`), and hyphens (`-`).
 
 ### `var_name`
+
 **Required.** The substitution variable name. Must satisfy `[A-Za-z_][A-Za-z0-9_]*`. Referenced as `$VAR_NAME` in the command's `actions` entries. Must be unique across all `vars:` names and other `args` `var_name` values within the same command.
 
 ### `type`
+
 **Required.** Must be `str` in v1. Positional arguments always receive a single string value from the caller.
 
 ### `required`
+
 **Optional.** Defaults to `true`. When `true`, `clap` will error if the caller omits this argument. When `false`, the positional is optional; if omitted, its `$VAR_NAME` reference in `actions` entries resolves to an empty string.
 
 ### `help`
+
 **Optional.** A short description shown in `clap`'s `--help` output.
 
 ### Ordering
+
 Positionals are registered with `clap` in the order they appear in the `args:` list. Required positionals must not appear after optional ones — this is a validation error (it would make the optional positional unreachable).
 
 ```yaml
@@ -418,7 +436,7 @@ args:
 
 ## Argument Assembly
 
-> **Clarification on two distinct models:** The assembly described below refers to constructing the **child process argv** — the argument vector passed to each action's underlying CLI via non-shell exec. This is separate from the **`clap` parsing model** that Saran builds for its own CLI. Saran uses `clap` to parse the *caller's* invocation of the wrapper (subcommand selection and optional flag values); the result of that parse is then used to build each child process argv via the rules below.
+> **Clarification on two distinct models:** The assembly described below refers to constructing the **child process argv** — the argument vector passed to each action's underlying CLI via non-shell exec. This is separate from the **`clap` parsing model** that Saran builds for its own CLI. Saran uses `clap` to parse the _caller's_ invocation of the wrapper (subcommand selection and optional flag values); the result of that parse is then used to build each child process argv via the rules below.
 
 When a subcommand is invoked, Saran assembles and executes the actions as follows:
 
@@ -426,11 +444,11 @@ When a subcommand is invoked, Saran assembles and executes the actions as follow
 2. For each action entry in `actions:`, in declaration order:
    a. Build the argument array: perform `$VAR_NAME` substitution on each element, resolving against both resolved `vars:` values (computed at startup) and `args` `var_name` values (supplied by caller at runtime)
    b. Append any caller-supplied optional flags that belong to this action:
-      - If `type: str`, `int`, or `enum` and `repeated: false` (default): append `[passes_as ?? name, value]` (for `int`, value is rendered as a decimal string)
-      - If `type: str`, `int`, or `enum` and `repeated: true`: for each supplied value in order, append `[passes_as ?? name, value]`
-      - If `type: bool`: append `[passes_as ?? name]`
-   c. Execute the resulting array via non-shell exec with the forced environment
-   d. If the action exits non-zero, halt immediately and return that exit code to the caller
+   - If `type: str`, `int`, or `enum` and `repeated: false` (default): append `[passes_as ?? name, value]` (for `int`, value is rendered as a decimal string)
+   - If `type: str`, `int`, or `enum` and `repeated: true`: for each supplied value in order, append `[passes_as ?? name, value]`
+   - If `type: bool`: append `[passes_as ?? name]`
+     c. Execute the resulting array via non-shell exec with the forced environment
+     d. If the action exits non-zero, halt immediately and return that exit code to the caller
 3. If all actions succeed, exit with code `0`
 
 > **Notation:** `passes_as ?? name` is null-coalesce shorthand — use `passes_as` if it is declared on the flag, otherwise fall back to `name`. In practice: if the flag definition includes `passes_as`, the underlying CLI sees that string; if not, it sees `name` unchanged.

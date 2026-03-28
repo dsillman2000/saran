@@ -14,12 +14,12 @@ The `saran env` command is the primary interface for reading and writing this co
 
 When a Saran wrapper starts, each variable declared in `vars:` is resolved in the following priority order. The **first source that provides a value wins**:
 
-| Priority | Source | How to set |
-|---|---|---|
-| 1 (highest) | Per-wrapper namespace in `env.yaml` | `saran env <wrapper> VAR=value` |
-| 2 | Global namespace in `env.yaml` | `saran env VAR=value` |
-| 3 | Host environment | Shell profile, credential manager, etc. |
-| 4 (lowest) | `default:` in wrapper `vars:` entry | Declared in the wrapper YAML |
+| Priority    | Source                              | How to set                              |
+| ----------- | ----------------------------------- | --------------------------------------- |
+| 1 (highest) | Per-wrapper namespace in `env.yaml` | `saran env <wrapper> VAR=value`         |
+| 2           | Global namespace in `env.yaml`      | `saran env VAR=value`                   |
+| 3           | Host environment                    | Shell profile, credential manager, etc. |
+| 4 (lowest)  | `default:` in wrapper `vars:` entry | Declared in the wrapper YAML            |
 
 If all four sources yield no value and the variable is declared `required: true`, Saran exits immediately with a descriptive error before executing any command:
 
@@ -98,13 +98,13 @@ saran env --unset GH_REPO             # removes global override
 
 `saran env` output annotates each value with its source:
 
-| Annotation | Meaning |
-|---|---|
-| `[per-wrapper]` | Set via `saran env <wrapper> VAR=value` |
-| `[global]` | Set via `saran env VAR=value` |
-| `[host]` | Resolved from the host environment |
-| `[default]` | Falling back to `default:` declared in the wrapper YAML |
-| `⚠ required — not set` | `required: true` with no value in any layer |
+| Annotation              | Meaning                                                 |
+| ----------------------- | ------------------------------------------------------- |
+| `[per-wrapper]`         | Set via `saran env <wrapper> VAR=value`                 |
+| `[global]`              | Set via `saran env VAR=value`                           |
+| `[host]`                | Resolved from the host environment                      |
+| `[default]`             | Falling back to `default:` declared in the wrapper YAML |
+| `⚠ required — not set` | `required: true` with no value in any layer             |
 
 > **Note:** `saran env` never invokes any wrapper. It is a purely diagnostic and configuration tool.
 
@@ -126,9 +126,11 @@ wrappers:
 ```
 
 ### `global`
+
 A map of variable names to string values. These are applied to every installed wrapper's resolution chain at priority 2 (below per-wrapper, above host).
 
 ### `wrappers`
+
 A map of wrapper names to per-wrapper variable maps. Each wrapper's map is applied only when that wrapper is invoked, at priority 1 (highest).
 
 ---
@@ -166,10 +168,10 @@ glab-mr-note.mr.rw.quota:
 
 ### Quota Entry Fields
 
-| Field | Description |
-|---|---|
-| `remaining` | Number of executions remaining until reset |
-| `limit` | The configured maximum (from wrapper's `quotas:` declaration or variable) |
+| Field       | Description                                                               |
+| ----------- | ------------------------------------------------------------------------- |
+| `remaining` | Number of executions remaining until reset                                |
+| `limit`     | The configured maximum (from wrapper's `quotas:` declaration or variable) |
 
 ### Quota Behavior
 

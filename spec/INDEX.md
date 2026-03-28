@@ -8,13 +8,13 @@ This document maps all Saran specifications and their relationships. Use this to
 
 ### Format & Behavior
 
-| Document | Purpose | Audience | Status |
-|----------|---------|----------|--------|
-| **[saran-format.md](./saran-format.md)** | YAML wrapper file schema and execution model | Wrapper authors, developers | ✅ Complete |
-| **[saran-cli.md](./saran-cli.md)** | User-facing CLI commands (install, remove, list, env) | End users, operators | ✅ Complete |
-| **[saran-env.md](./saran-env.md)** | Environment variable resolution and configuration | Operators, developers | ✅ Complete |
-| **[saran-conventions.md](./saran-conventions.md)** | Wrapper naming conventions and scoping patterns | Wrapper authors | ✅ Complete |
-| **[saran-codegen.md](./saran-codegen.md)** | How YAML is transformed into executable Rust code | Developers, code reviewers | ✅ Complete (this document) |
+| Document                                           | Purpose                                               | Audience                    | Status                      |
+| -------------------------------------------------- | ----------------------------------------------------- | --------------------------- | --------------------------- |
+| **[saran-format.md](./saran-format.md)**           | YAML wrapper file schema and execution model          | Wrapper authors, developers | ✅ Complete                 |
+| **[saran-cli.md](./saran-cli.md)**                 | User-facing CLI commands (install, remove, list, env) | End users, operators        | ✅ Complete                 |
+| **[saran-env.md](./saran-env.md)**                 | Environment variable resolution and configuration     | Operators, developers       | ✅ Complete                 |
+| **[saran-conventions.md](./saran-conventions.md)** | Wrapper naming conventions and scoping patterns       | Wrapper authors             | ✅ Complete                 |
+| **[saran-codegen.md](./saran-codegen.md)**         | How YAML is transformed into executable Rust code     | Developers, code reviewers  | ✅ Complete (this document) |
 
 ---
 
@@ -22,23 +22,23 @@ This document maps all Saran specifications and their relationships. Use this to
 
 ### Unit Tests (Fast, No Dependencies)
 
-| Document | Test Count | Coverage | Status |
-|----------|-----------|----------|--------|
-| **[spec/tests/unit/01-yaml-validation.md](./tests/unit/01-yaml-validation.md)** | 59 | YAML schema validation, error messages | ✅ Complete |
-| **[spec/tests/unit/02-token-parsing.md](./tests/unit/02-token-parsing.md)** | 6 | `$VAR_NAME` token extraction | ✅ Complete |
-| **[spec/tests/unit/03-variable-resolution.md](./tests/unit/03-variable-resolution.md)** | 14 | Env.yaml priority chain resolution | ✅ Complete |
-| **[spec/tests/unit/04-substitution-resolution.md](./tests/unit/04-substitution-resolution.md)** | 10 | Variable substitution in strings | ✅ Complete |
-| **[spec/tests/unit/05-argument-assembly.md](./tests/unit/05-argument-assembly.md)** | 19 | Child process argv construction | ✅ Complete |
-| **Code Generation** | TBD | Generated Rust code correctness | 📋 To be specified |
+| Document                                                                                        | Test Count | Coverage                               | Status             |
+| ----------------------------------------------------------------------------------------------- | ---------- | -------------------------------------- | ------------------ |
+| **[spec/tests/unit/01-yaml-validation.md](./tests/unit/01-yaml-validation.md)**                 | 59         | YAML schema validation, error messages | ✅ Complete        |
+| **[spec/tests/unit/02-token-parsing.md](./tests/unit/02-token-parsing.md)**                     | 6          | `$VAR_NAME` token extraction           | ✅ Complete        |
+| **[spec/tests/unit/03-variable-resolution.md](./tests/unit/03-variable-resolution.md)**         | 14         | Env.yaml priority chain resolution     | ✅ Complete        |
+| **[spec/tests/unit/04-substitution-resolution.md](./tests/unit/04-substitution-resolution.md)** | 10         | Variable substitution in strings       | ✅ Complete        |
+| **[spec/tests/unit/05-argument-assembly.md](./tests/unit/05-argument-assembly.md)**             | 19         | Child process argv construction        | ✅ Complete        |
+| **Code Generation**                                                                             | TBD        | Generated Rust code correctness        | 📋 To be specified |
 
 **Total Unit Tests: 108 (+ code generation tests)**
 
 ### Integration Tests (Slower, With Dependencies)
 
-| Document | Scenarios | Coverage | Status |
-|----------|-----------|----------|--------|
-| **[spec/tests/integration/scenarios/ro.yaml](./tests/integration/scenarios/ro.yaml)** | 11 | Redis read-only wrapper execution | ✅ Complete |
-| **CLI Integration** | TBD | `saran install/list/remove/env` commands | 📋 To be specified |
+| Document                                                                              | Scenarios | Coverage                                 | Status             |
+| ------------------------------------------------------------------------------------- | --------- | ---------------------------------------- | ------------------ |
+| **[spec/tests/integration/scenarios/ro.yaml](./tests/integration/scenarios/ro.yaml)** | 11        | Redis read-only wrapper execution        | ✅ Complete        |
+| **CLI Integration**                                                                   | TBD       | `saran install/list/remove/env` commands | 📋 To be specified |
 
 ---
 
@@ -56,7 +56,7 @@ flowchart TD
     F["Compile via<br/>cargo build"]
     G["Place binary in<br/>~/.local/share/saran/bin/"]
     H["Store YAML in<br/>~/.local/share/saran/wrappers/"]
-    
+
     A --> B --> C --> D --> E --> F --> G --> H
 ```
 
@@ -76,7 +76,7 @@ flowchart TD
     J["exec_action<br/>executable, argv,<br/>resolved_vars"]
     K["Stream I/O<br/>back to caller"]
     L["Return<br/>exit code"]
-    
+
     A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L
 ```
 
@@ -87,13 +87,13 @@ flowchart TD
     A["Operator runs: saran env"]
     B["Parse<br/>~/.local/share/saran/env.yaml"]
     C["Display all variables for<br/>all wrappers with<br/>source annotations"]
-    
+
     D["Operator runs: saran env<br/>gh-pr.repo.ro<br/>GH_REPO=myorg/myrepo"]
     E["Load env.yaml"]
     F["Set per-wrapper<br/>value"]
     G["Write back to<br/>env.yaml"]
     H["When gh-pr.repo.ro<br/>next runs:<br/>GH_REPO resolves to<br/>myorg/myrepo<br/>highest priority in chain"]
-    
+
     A --> B --> C
     D --> E --> F --> G --> H
 ```
@@ -104,57 +104,60 @@ flowchart TD
 
 ### Core Logic (Unit Tests)
 
-| Function | Spec | Tests | Notes |
-|----------|------|-------|-------|
-| **Parse wrapper YAML** | saran-format.md | 01-yaml-validation | Schema validation |
-| **Validate schema** | saran-format.md | 01-yaml-validation (59) | All error types |
-| **Parse $VAR_NAME tokens** | saran-format.md | 02-token-parsing (6) | Greedy matching rules |
-| **Resolve variables** | saran-env.md | 03-variable-resolution (14) | Priority chain |
-| **Substitute tokens** | saran-format.md | 04-substitution-resolution (10) | Context-specific rules |
-| **Assemble argv** | saran-format.md | 05-argument-assembly (19) | Flag appending, order |
-| **Generate Rust code** | saran-codegen.md | Code Generation (TBD) | Clap integration, validity |
+| Function                   | Spec             | Tests                           | Notes                      |
+| -------------------------- | ---------------- | ------------------------------- | -------------------------- |
+| **Parse wrapper YAML**     | saran-format.md  | 01-yaml-validation              | Schema validation          |
+| **Validate schema**        | saran-format.md  | 01-yaml-validation (59)         | All error types            |
+| **Parse $VAR_NAME tokens** | saran-format.md  | 02-token-parsing (6)            | Greedy matching rules      |
+| **Resolve variables**      | saran-env.md     | 03-variable-resolution (14)     | Priority chain             |
+| **Substitute tokens**      | saran-format.md  | 04-substitution-resolution (10) | Context-specific rules     |
+| **Assemble argv**          | saran-format.md  | 05-argument-assembly (19)       | Flag appending, order      |
+| **Generate Rust code**     | saran-codegen.md | Code Generation (TBD)           | Clap integration, validity |
 
 ### Real Behavior (Integration Tests)
 
-| Scenario | Wrapper | Coverage | Expected |
-|----------|---------|----------|----------|
-| **Constraint enforcement** | redis-cli-info.db.ro | Wrapper blocks undeclared commands | ✅ Only PING/INFO/DBSIZE allowed |
-| **Variable injection** | redis-cli-info.db.ro | Vars pass to child process | ✅ redis-cli receives -h/-p/-n values |
-| **Scope enforcement** | redis-cli-key-meta.prefix.ro | Key prefix is enforced | ✅ Cannot read outside prefix |
-| **Error handling** | redis-cli-info.db.ro | Connection errors propagate | ✅ Clear error messages |
-| **CLI integration** | TBD | saran install/list/remove/env | 📋 To be specified |
+| Scenario                   | Wrapper                      | Coverage                           | Expected                              |
+| -------------------------- | ---------------------------- | ---------------------------------- | ------------------------------------- |
+| **Constraint enforcement** | redis-cli-info.db.ro         | Wrapper blocks undeclared commands | ✅ Only PING/INFO/DBSIZE allowed      |
+| **Variable injection**     | redis-cli-info.db.ro         | Vars pass to child process         | ✅ redis-cli receives -h/-p/-n values |
+| **Scope enforcement**      | redis-cli-key-meta.prefix.ro | Key prefix is enforced             | ✅ Cannot read outside prefix         |
+| **Error handling**         | redis-cli-info.db.ro         | Connection errors propagate        | ✅ Clear error messages               |
+| **CLI integration**        | TBD                          | saran install/list/remove/env      | 📋 To be specified                    |
 
 ---
 
 ## Implementation Timeline
 
 ### Phase 1: Foundation (Week 1)
+
 ```
 ✅ Implement pure function tests
   - 01-yaml-validation.md (59 tests)
   - 02-token-parsing.md (6 tests)
-  
+
 → Deliverable: Complete YAML parsing & validation
 ```
 
 ### Phase 2: Data Transformations (Week 2)
+
 ```
 ✅ Implement core logic tests
   - 03-variable-resolution.md (14 tests)
   - 04-substitution-resolution.md (10 tests)
   - 05-argument-assembly.md (19 tests)
   - Code generation tests (TBD)
-  
+
 → Deliverable: Complete variable resolution & code generation
 ```
 
 ### Phase 3: Integration (Week 3)
+
 ```
 ✅ Wire components together
   - Integration tests with testcontainers
   - CLI command tests
   - End-to-end wrapper execution
-  
+
 → Deliverable: Working saran binary with wrapper support
 ```
 
@@ -173,6 +176,7 @@ flowchart TD
 ### 2. Variable Resolution Chain (saran-env.md)
 
 Priority order (highest → lowest):
+
 1. Per-wrapper namespace in env.yaml
 2. Global namespace in env.yaml
 3. Host environment
@@ -204,28 +208,28 @@ graph TD
     D["02-token-parsing.md<br/>tests"]
     E["04-substitution-resolution.md<br/>tests"]
     F["05-argument-assembly.md<br/>tests"]
-    
+
     G["saran-env.md<br/>base"]
     H["03-variable-resolution.md<br/>tests"]
     I["saran-codegen.md<br/>how vars are resolved at runtime"]
-    
+
     J["saran-cli.md<br/>reference"]
     K["Integration tests<br/>TBD"]
-    
+
     L["saran-conventions.md<br/>guidelines"]
     M["Example wrappers<br/>spec/examples/"]
-    
+
     A --> B
     A --> C
     A --> D
     A --> E
     E --> F
-    
+
     G --> H
     G --> I
-    
+
     J --> K
-    
+
     L --> M
 ```
 
@@ -234,6 +238,7 @@ graph TD
 ## What's Ready for Implementation
 
 ✅ **Ready** (complete specifications)
+
 - YAML format (saran-format.md)
 - CLI commands (saran-cli.md)
 - Variable resolution (saran-env.md)
@@ -243,6 +248,7 @@ graph TD
 - Integration test scenarios (ro.yaml)
 
 📋 **To Specify**
+
 - Code generation unit tests (details)
 - CLI integration tests (scenarios)
 - Error handling taxonomy (error codes & messages)
@@ -253,20 +259,24 @@ graph TD
 ## Quick Reference
 
 ### For Wrapper Authors
+
 - Read: saran-format.md, saran-conventions.md
 - Reference: spec/examples/
 
 ### For Operators
+
 - Read: saran-cli.md, saran-env.md
 - Reference: saran-conventions.md (wrapper scoping)
 
 ### For Developers
+
 - Read: saran-codegen.md (code generation)
-- Read: tests/unit/*.md (behavior specification)
-- Read: tests/integration/*.md (end-to-end behavior)
+- Read: tests/unit/\*.md (behavior specification)
+- Read: tests/integration/\*.md (end-to-end behavior)
 - Reference: IMPLEMENTATION.md (project timeline)
 
 ### For Code Reviewers
+
 - Check: Generated code matches saran-codegen.md patterns
 - Check: Unit tests cover 01-05 test specifications
 - Check: Integration tests exercise real CLI behavior
@@ -284,7 +294,7 @@ graph TD
     D["saran-env.md<br/>Variable resolution"]
     E["saran-conventions.md<br/>Naming conventions"]
     F["saran-codegen.md<br/>Code generation spec ← NEW"]
-    
+
     G["tests/"]
     H["unit/"]
     I["README.md"]
@@ -295,12 +305,12 @@ graph TD
     N["03-variable-resolution.md"]
     O["04-substitution-resolution.md"]
     P["05-argument-assembly.md"]
-    
+
     Q["integration/"]
     R["README.md"]
     S["scenarios/"]
     T["ro.yaml"]
-    
+
     U["examples/"]
     V["redis-cli/"]
     W["redis-cli-info.db.ro.yaml"]
@@ -308,9 +318,9 @@ graph TD
     Y["redis-cli-string-set.key.rw.quota.yaml"]
     Z["gh/"]
     AA["glab/"]
-    
+
     AB["README.md"]
-    
+
     A --> B
     A --> C
     A --> D
@@ -319,10 +329,10 @@ graph TD
     A --> G
     A --> U
     A --> AB
-    
+
     G --> H
     G --> Q
-    
+
     H --> I
     H --> J
     H --> K
@@ -331,11 +341,11 @@ graph TD
     H --> N
     H --> O
     H --> P
-    
+
     Q --> R
     Q --> S
     S --> T
-    
+
     U --> V
     U --> Z
     U --> AA

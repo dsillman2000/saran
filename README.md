@@ -25,12 +25,12 @@ agent, preventing it from taking destructive actions while still giving it the a
 
 ## Specification
 
-| Document | Description |
-|---|---|
-| [`spec/saran-format.md`](spec/saran-format.md) | YAML wrapper format — the complete schema reference for authoring wrapper files, including `vars`, `quotas`, and `commands` |
-| [`spec/saran-cli.md`](spec/saran-cli.md) | `saran` CLI reference — `install`, `remove`, `list`, `validate`, `quotas`, and the multicall model |
-| [`spec/saran-env.md`](spec/saran-env.md) | `saran env` reference — variable resolution, `env.yaml` format, and security guidance |
-| [`spec/saran-conventions.md`](spec/saran-conventions.md) | Naming conventions for wrapper files — the `[cli-fragment].[scope].[ro\|rw][.quota]` scheme |
+| Document                                                 | Description                                                                                                                 |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| [`spec/saran-format.md`](spec/saran-format.md)           | YAML wrapper format — the complete schema reference for authoring wrapper files, including `vars`, `quotas`, and `commands` |
+| [`spec/saran-cli.md`](spec/saran-cli.md)                 | `saran` CLI reference — `install`, `remove`, `list`, `validate`, `quotas`, and the multicall model                          |
+| [`spec/saran-env.md`](spec/saran-env.md)                 | `saran env` reference — variable resolution, `env.yaml` format, and security guidance                                       |
+| [`spec/saran-conventions.md`](spec/saran-conventions.md) | Naming conventions for wrapper files — the `[cli-fragment].[scope].[ro\|rw][.quota]` scheme                                 |
 
 ---
 
@@ -42,85 +42,85 @@ Examples are organized by the CLI they wrap under `spec/examples/`.
 
 #### `gh pr`
 
-| File | Description |
-|---|---|
-| [`spec/examples/gh/gh-pr.ro.yaml`](spec/examples/gh/gh-pr.ro.yaml) | Read-only wrapper for `gh pr` — exposes `list`, `status`, `view`, `diff`, `checks`, `checkout` with no fixed repo scope |
-| [`spec/examples/gh/gh-pr.repo.ro.yaml`](spec/examples/gh/gh-pr.repo.ro.yaml) | Repo-locked variant — requires `GH_REPO` to be set via `saran env` |
+| File                                                                                                 | Description                                                                                                                                                   |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`spec/examples/gh/gh-pr.ro.yaml`](spec/examples/gh/gh-pr.ro.yaml)                                   | Read-only wrapper for `gh pr` — exposes `list`, `status`, `view`, `diff`, `checks`, `checkout` with no fixed repo scope                                       |
+| [`spec/examples/gh/gh-pr.repo.ro.yaml`](spec/examples/gh/gh-pr.repo.ro.yaml)                         | Repo-locked variant — requires `GH_REPO` to be set via `saran env`                                                                                            |
 | [`spec/examples/gh/gh-pr-comment.pr.rw.quota.yaml`](spec/examples/gh/gh-pr-comment.pr.rw.quota.yaml) | PR- and repo-locked wrapper with read-only commands plus a quota-guarded `comment` — `GH_REPO`, `GH_PR`, and `GH_PR_COMMENT_QUOTA` configured via `saran env` |
 
 #### `gh issue`
 
-| File | Description |
-|---|---|
-| [`spec/examples/gh/gh-issue.ro.yaml`](spec/examples/gh/gh-issue.ro.yaml) | Read-only wrapper for `gh issue` — exposes `list`, `status`, `view` with no fixed repo scope |
-| [`spec/examples/gh/gh-issue.repo.ro.yaml`](spec/examples/gh/gh-issue.repo.ro.yaml) | Repo-locked variant — requires `GH_REPO` to be set via `saran env` |
-| [`spec/examples/gh/gh-issue-create.repo.rw.quota.yaml`](spec/examples/gh/gh-issue-create.repo.rw.quota.yaml) | Repo-locked wrapper with read-only commands plus a quota-guarded `create` — `GH_REPO` and `GH_ISSUE_CREATE_QUOTA` configured via `saran env` |
+| File                                                                                                             | Description                                                                                                                                                            |
+| ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`spec/examples/gh/gh-issue.ro.yaml`](spec/examples/gh/gh-issue.ro.yaml)                                         | Read-only wrapper for `gh issue` — exposes `list`, `status`, `view` with no fixed repo scope                                                                           |
+| [`spec/examples/gh/gh-issue.repo.ro.yaml`](spec/examples/gh/gh-issue.repo.ro.yaml)                               | Repo-locked variant — requires `GH_REPO` to be set via `saran env`                                                                                                     |
+| [`spec/examples/gh/gh-issue-create.repo.rw.quota.yaml`](spec/examples/gh/gh-issue-create.repo.rw.quota.yaml)     | Repo-locked wrapper with read-only commands plus a quota-guarded `create` — `GH_REPO` and `GH_ISSUE_CREATE_QUOTA` configured via `saran env`                           |
 | [`spec/examples/gh/gh-issue-comment.issue.rw.quota.yaml`](spec/examples/gh/gh-issue-comment.issue.rw.quota.yaml) | Issue- and repo-locked wrapper with read-only commands plus a quota-guarded `comment` — `GH_REPO`, `GH_ISSUE`, and `GH_ISSUE_COMMENT_QUOTA` configured via `saran env` |
 
 #### `gh run`
 
-| File | Description |
-|---|---|
-| [`spec/examples/gh/gh-run.ro.yaml`](spec/examples/gh/gh-run.ro.yaml) | Read-only wrapper for `gh run` — exposes `list`, `view`, `watch`, `download` with no fixed repo scope |
-| [`spec/examples/gh/gh-run.repo.ro.yaml`](spec/examples/gh/gh-run.repo.ro.yaml) | Repo-locked variant — requires `GH_REPO` to be set via `saran env` |
+| File                                                                           | Description                                                                                           |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| [`spec/examples/gh/gh-run.ro.yaml`](spec/examples/gh/gh-run.ro.yaml)           | Read-only wrapper for `gh run` — exposes `list`, `view`, `watch`, `download` with no fixed repo scope |
+| [`spec/examples/gh/gh-run.repo.ro.yaml`](spec/examples/gh/gh-run.repo.ro.yaml) | Repo-locked variant — requires `GH_REPO` to be set via `saran env`                                    |
 
 #### `gh release`
 
-| File | Description |
-|---|---|
+| File                                                                                   | Description                                                                                                                        |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | [`spec/examples/gh/gh-release.repo.ro.yaml`](spec/examples/gh/gh-release.repo.ro.yaml) | Repo-locked read-only wrapper for `gh release` — exposes `list`, `view`, `download`; `view` and `download` require an explicit tag |
 
 #### `gh search`
 
-| File | Description |
-|---|---|
+| File                                                                                 | Description                                                                                                                        |
+| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | [`spec/examples/gh/gh-search.repo.ro.yaml`](spec/examples/gh/gh-search.repo.ro.yaml) | Repo-scoped read-only wrapper for `gh search` — exposes `issues`, `prs`, `commits`, `code`, all filtered to `GH_REPO` via `--repo` |
 
 ### `spec/examples/glab/` — GitLab CLI wrappers
 
 #### `glab mr`
 
-| File | Description |
-|---|---|
-| [`spec/examples/glab/glab-mr.ro.yaml`](spec/examples/glab/glab-mr.ro.yaml) | Read-only wrapper for `glab mr` — exposes `list`, `view`, `diff`, `issues`, `approvers` with no fixed repo scope; `--repo` available per-invocation |
-| [`spec/examples/glab/glab-mr.repo.ro.yaml`](spec/examples/glab/glab-mr.repo.ro.yaml) | Repo-locked variant — requires `GLAB_REPO` to be set via `saran env` |
+| File                                                                                                   | Description                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`spec/examples/glab/glab-mr.ro.yaml`](spec/examples/glab/glab-mr.ro.yaml)                             | Read-only wrapper for `glab mr` — exposes `list`, `view`, `diff`, `issues`, `approvers` with no fixed repo scope; `--repo` available per-invocation                                                      |
+| [`spec/examples/glab/glab-mr.repo.ro.yaml`](spec/examples/glab/glab-mr.repo.ro.yaml)                   | Repo-locked variant — requires `GLAB_REPO` to be set via `saran env`                                                                                                                                     |
 | [`spec/examples/glab/glab-mr-note.mr.rw.quota.yaml`](spec/examples/glab/glab-mr-note.mr.rw.quota.yaml) | MR- and repo-locked wrapper with `list`, fixed-MR `view` and `diff`, plus quota-guarded `note`, `resolve`, and `unresolve` — `GLAB_REPO`, `GLAB_MR`, and `GLAB_MR_NOTE_QUOTA` configured via `saran env` |
 
 #### `glab issue`
 
-| File | Description |
-|---|---|
-| [`spec/examples/glab/glab-issue.ro.yaml`](spec/examples/glab/glab-issue.ro.yaml) | Read-only wrapper for `glab issue` — exposes `list`, `view`, `board-view` with no fixed repo scope |
-| [`spec/examples/glab/glab-issue.repo.ro.yaml`](spec/examples/glab/glab-issue.repo.ro.yaml) | Repo-locked variant — requires `GLAB_REPO` to be set via `saran env` |
-| [`spec/examples/glab/glab-issue-create.repo.rw.quota.yaml`](spec/examples/glab/glab-issue-create.repo.rw.quota.yaml) | Repo-locked wrapper with read-only commands plus a quota-guarded `create` — `GLAB_REPO` and `GLAB_ISSUE_CREATE_QUOTA` configured via `saran env` |
-| [`spec/examples/glab/glab-issue-note.issue.rw.quota.yaml`](spec/examples/glab/glab-issue-note.issue.rw.quota.yaml) | Issue- and repo-locked wrapper with `list`, fixed-issue `view`, plus a quota-guarded `note` — `GLAB_REPO`, `GLAB_ISSUE`, and `GLAB_ISSUE_NOTE_QUOTA` configured via `saran env` |
+| File                                                                                                                 | Description                                                                                                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`spec/examples/glab/glab-issue.ro.yaml`](spec/examples/glab/glab-issue.ro.yaml)                                     | Read-only wrapper for `glab issue` — exposes `list`, `view`, `board-view` with no fixed repo scope                                                                              |
+| [`spec/examples/glab/glab-issue.repo.ro.yaml`](spec/examples/glab/glab-issue.repo.ro.yaml)                           | Repo-locked variant — requires `GLAB_REPO` to be set via `saran env`                                                                                                            |
+| [`spec/examples/glab/glab-issue-create.repo.rw.quota.yaml`](spec/examples/glab/glab-issue-create.repo.rw.quota.yaml) | Repo-locked wrapper with read-only commands plus a quota-guarded `create` — `GLAB_REPO` and `GLAB_ISSUE_CREATE_QUOTA` configured via `saran env`                                |
+| [`spec/examples/glab/glab-issue-note.issue.rw.quota.yaml`](spec/examples/glab/glab-issue-note.issue.rw.quota.yaml)   | Issue- and repo-locked wrapper with `list`, fixed-issue `view`, plus a quota-guarded `note` — `GLAB_REPO`, `GLAB_ISSUE`, and `GLAB_ISSUE_NOTE_QUOTA` configured via `saran env` |
 
 #### `glab ci`
 
-| File | Description |
-|---|---|
-| [`spec/examples/glab/glab-ci.ro.yaml`](spec/examples/glab/glab-ci.ro.yaml) | Read-only wrapper for `glab ci` — exposes `list`, `get`, `status`, `trace`, `artifact` with no fixed repo scope |
-| [`spec/examples/glab/glab-ci.repo.ro.yaml`](spec/examples/glab/glab-ci.repo.ro.yaml) | Repo-locked variant — requires `GLAB_REPO` to be set via `saran env` |
+| File                                                                                     | Description                                                                                                                              |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| [`spec/examples/glab/glab-ci.ro.yaml`](spec/examples/glab/glab-ci.ro.yaml)               | Read-only wrapper for `glab ci` — exposes `list`, `get`, `status`, `trace`, `artifact` with no fixed repo scope                          |
+| [`spec/examples/glab/glab-ci.repo.ro.yaml`](spec/examples/glab/glab-ci.repo.ro.yaml)     | Repo-locked variant — requires `GLAB_REPO` to be set via `saran env`                                                                     |
 | [`spec/examples/glab/glab-ci.branch.ro.yaml`](spec/examples/glab/glab-ci.branch.ro.yaml) | Branch-locked variant — fixes both `GLAB_REPO` and `GLAB_BRANCH`; `--branch`/`--ref` removed from optional flags since they are baked in |
 
 #### `glab release`
 
-| File | Description |
-|---|---|
+| File                                                                                           | Description                                                                                                                                            |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [`spec/examples/glab/glab-release.repo.ro.yaml`](spec/examples/glab/glab-release.repo.ro.yaml) | Repo-locked read-only wrapper for `glab release` — exposes `list`, `view`, `download`; tag is optional on all commands (omit to target latest release) |
 
 ### `spec/examples/redis-cli/` — Redis CLI wrappers
 
-| File | Description |
-|---|---|
-| [`spec/examples/redis-cli/redis-cli-info.db.ro.yaml`](spec/examples/redis-cli/redis-cli-info.db.ro.yaml) | DB-scoped read-only wrapper for `redis-cli` — exposes `ping`, `info`, and `dbsize` against a fixed host/port/db |
-| [`spec/examples/redis-cli/redis-cli-key-meta.prefix.ro.yaml`](spec/examples/redis-cli/redis-cli-key-meta.prefix.ro.yaml) | Prefix-scoped read-only wrapper for `redis-cli` — exposes `scan`, `type`, `ttl`, and `exists` only for keys under `REDIS_KEY_PREFIX` |
-| [`spec/examples/redis-cli/redis-cli-string-set.key.rw.quota.yaml`](spec/examples/redis-cli/redis-cli-string-set.key.rw.quota.yaml) | Key-scoped wrapper for `redis-cli` with fixed-key `get` plus quota-guarded `set` — configured via `REDIS_KEY` and `REDIS_SET_QUOTA` |
+| File                                                                                                                               | Description                                                                                                                          |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| [`spec/examples/redis-cli/redis-cli-info.db.ro.yaml`](spec/examples/redis-cli/redis-cli-info.db.ro.yaml)                           | DB-scoped read-only wrapper for `redis-cli` — exposes `ping`, `info`, and `dbsize` against a fixed host/port/db                      |
+| [`spec/examples/redis-cli/redis-cli-key-meta.prefix.ro.yaml`](spec/examples/redis-cli/redis-cli-key-meta.prefix.ro.yaml)           | Prefix-scoped read-only wrapper for `redis-cli` — exposes `scan`, `type`, `ttl`, and `exists` only for keys under `REDIS_KEY_PREFIX` |
+| [`spec/examples/redis-cli/redis-cli-string-set.key.rw.quota.yaml`](spec/examples/redis-cli/redis-cli-string-set.key.rw.quota.yaml) | Key-scoped wrapper for `redis-cli` with fixed-key `get` plus quota-guarded `set` — configured via `REDIS_KEY` and `REDIS_SET_QUOTA`  |
 
 ### `spec/examples/` — General examples
 
-| File | Description |
-|---|---|
+| File                                                   | Description                                        |
+| ------------------------------------------------------ | -------------------------------------------------- |
 | [`spec/examples/greet.yaml`](spec/examples/greet.yaml) | Minimal wrapper demonstrating positional arguments |
 
 ---

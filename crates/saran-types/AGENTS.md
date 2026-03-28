@@ -21,16 +21,16 @@ This document guides developers maintaining the `saran-types` crate. It document
 
 Every type definition corresponds directly to a section in `spec/saran-format.md`:
 
-| Type | Spec Section |
-|------|--------------|
-| `WrapperDefinition` | Top-level structure |
-| `Command` | Command definition |
-| `Action` | Actions entry |
-| `OptionalFlag` | Optional flag definition |
-| `VarDecl` | vars entry |
-| `PositionalArg` | Positional argument definition |
-| `CliRequirement` | requires entry |
-| `QuotaEntry` | quotas entry |
+| Type                | Spec Section                   |
+| ------------------- | ------------------------------ |
+| `WrapperDefinition` | Top-level structure            |
+| `Command`           | Command definition             |
+| `Action`            | Actions entry                  |
+| `OptionalFlag`      | Optional flag definition       |
+| `VarDecl`           | vars entry                     |
+| `PositionalArg`     | Positional argument definition |
+| `CliRequirement`    | requires entry                 |
+| `QuotaEntry`        | quotas entry                   |
 
 When the spec changes, update the corresponding type and doc comments immediately.
 
@@ -44,6 +44,7 @@ All types use `#[serde(derive)]` for YAML round-tripping. Key patterns:
 - **Collection fields** — use `Vec<T>` with `#[serde(default)]` to handle omission
 
 Example:
+
 ```rust
 pub struct VarDecl {
     pub name: String,                           // Required
@@ -57,6 +58,7 @@ pub struct VarDecl {
 ### 4. **Ordered Collections**
 
 Commands are stored in `BTreeMap<String, Command>` (not `HashMap`) to:
+
 - Maintain stable iteration order
 - Simplify codegen (predictable subcommand order)
 - Match YAML serialization order
