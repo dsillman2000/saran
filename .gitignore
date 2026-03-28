@@ -1,3 +1,12 @@
 .DS_Store
 .opencode/memory
 copy_spec_to_dropbox.sh
+
+target/
+Cargo.lock
+*.pdb
+/dist/
+.cargo/
+.rustup/
+
+coverage/

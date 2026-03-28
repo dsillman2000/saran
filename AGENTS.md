@@ -2,17 +2,20 @@
 
 ## Overview
 
-**Saran** is a specification-driven, test-driven design project for a CLI wrapper framework. It allows users to write declarative YAML wrappers around existing CLI tools, generating `clap`-powered binaries that expose only restricted subsets of the underlying CLI.
+**Saran** is a specification-driven, test-driven implementation of a CLI wrapper framework. It allows users to write declarative YAML wrappers around existing CLI tools, generating `clap`-powered binaries that expose only restricted subsets of the underlying CLI.
+
+The project is structured as a multi-crate Rust workspace, implementing the core logic across specialized modules for parsing, validation, and code generation.
 
 The primary use case is providing safe, read-only CLI access to LLM agents while preventing destructive actions.
 
 ## Project Philosophy
 
-This project follows a **specification-first** development methodology:
+This project follows a **specification-driven** development methodology within a Rust implementation framework:
 
 1. **Specifications** are the source of truth — all behavior is defined in `spec/*.md`
 2. **Test specifications** define expected behavior before implementation
-3. **Examples** demonstrate real-world wrapper configurations
+3. **Rust Implementation** - Features are implemented across six specialized crates: `saran`, `saran-core`, `saran-parser`, `saran-validation`, `saran-codegen`, and `saran-types`.
+4. **Examples** demonstrate real-world wrapper configurations
 
 **Do not implement without a corresponding specification.**
 
@@ -21,6 +24,7 @@ This project follows a **specification-first** development methodology:
 | Directory | Purpose |
 |-----------|---------|
 | `spec/` | All specification documents |
+| `crates/` | Core Rust implementation (six-crate design) |
 | `spec/saran-format.md` | YAML wrapper schema and execution model |
 | `spec/saran-cli.md` | User-facing CLI commands |
 | `spec/saran-env.md` | Environment variable resolution |
