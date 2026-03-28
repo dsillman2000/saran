@@ -1,6 +1,7 @@
 .DS_Store
 .opencode/memory
 copy_spec_to_dropbox.sh
+to-do.md
 
 target/
 Cargo.lock

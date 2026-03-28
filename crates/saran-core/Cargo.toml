@@ -8,5 +8,9 @@ rust-version.workspace = true
 serde_yaml.workspace = true
 serde.workspace = true
 saran-types.workspace = true
+saran-parser.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+saran-test.workspace = true
