@@ -979,7 +979,7 @@ Future spec: allow `$VAR_NAME` in optional flag values (not in v1).
 
 ### Quota Enforcement
 
-Future spec: if wrapper declares `quotas:`, generated code would check per-wrapper quota state before executing write commands.
+If the wrapper declares a `quotas:` block, the generated code checks per-wrapper quota state before executing quota-guarded write commands. Quota state is stored in `~/.local/share/saran/quotas.yaml` and tracks remaining operations per wrapper/command combination.
 
 ---
 

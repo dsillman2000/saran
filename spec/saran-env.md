@@ -92,17 +92,6 @@ saran env gh-pr.repo.ro --unset GH_REPO    # removes per-wrapper override; falls
 saran env --unset GH_REPO             # removes global override
 ```
 
-When a per-wrapper value is set, it takes precedence over the global namespace, host environment, and wrapper default for that wrapper only.
-
-### Unset: `saran env [<wrapper>] --unset VAR`
-
-Removes a variable from the per-wrapper or global namespace, allowing the next lower-priority source to take effect.
-
-```bash
-saran env gh-pr.repo.ro --unset GH_REPO    # removes per-wrapper override; falls back to global/host/default
-saran env --unset GH_REPO             # removes global override
-```
-
 ---
 
 ## Source Annotations
@@ -151,3 +140,40 @@ A map of wrapper names to per-wrapper variable maps. Each wrapper's map is appli
 - **Do not store secrets** (API tokens, passwords, credentials) in `env.yaml`. Any process with filesystem access to `~/.local/share/saran/` can read them.
 - **For secrets**, declare the variable as `required: true` (no `default:`) in the wrapper's `vars:` block and set it in your host environment via your shell profile, a secrets manager (e.g. `pass`, `1Password CLI`, macOS Keychain), or a credential helper. This ensures secrets never touch saran's configuration files.
 - **For non-secret context** (repository names, PR numbers, project identifiers), `saran env` is the appropriate tool. These values are not sensitive and benefit from the ergonomics of per-wrapper and global namespacing.
+
+---
+
+## Quota State Storage
+
+Quota state is stored in `~/.local/share/saran/quotas.yaml`. This file tracks remaining operations per wrapper/command combination.
+
+### `quotas.yaml` Format
+
+```yaml
+gh-pr-comment.pr.rw.quota:
+  comment:
+    remaining: 1
+    limit: 1
+
+glab-mr-note.mr.rw.quota:
+  note:
+    remaining: 3
+    limit: 5
+  resolve:
+    remaining: 5
+    limit: 5
+```
+
+### Quota Entry Fields
+
+| Field | Description |
+|---|---|
+| `remaining` | Number of executions remaining until reset |
+| `limit` | The configured maximum (from wrapper's `quotas:` declaration or variable) |
+
+### Quota Behavior
+
+- When a quota-guarded command is executed, `remaining` is decremented before the command runs
+- If `remaining` is 0, the command is rejected with an error and the wrapper exits with code 68 (exceeds quota)
+- `saran quotas reset <wrapper>` sets all `remaining` values back to their `limit` values
+- Quota state persists across wrapper invocations until manually reset by the operator

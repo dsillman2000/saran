@@ -149,6 +149,26 @@ error: required variable `GH_TOKEN` is not set.
 >
 > **Warning:** `~/.local/share/saran/env.yaml` is stored as plaintext. Do not use `saran env` to store secrets such as API tokens or credentials. For secrets, declare the variable as `required: true` (no `default:`) and set it in your host environment via your shell profile, a credential manager, or a secrets tool. This keeps secrets out of saran's configuration files entirely.
 
+### `quotas`
+**Optional.** A list of quota declarations that bound write operations. Each entry declares one command as quota-guarded, limiting how many times it can be executed within a session.
+
+```yaml
+quotas:
+  - command: comment
+    limit: $GH_PR_COMMENT_QUOTA
+  - command: create
+    limit: 5
+```
+
+#### `quotas` entry fields
+
+| Field | Required | Description |
+|---|---|---|
+| `command` | ✅ | The name of the command to quota (must match a key in `commands:`). |
+| `limit` | ✅ | The maximum number of executions allowed. Can be a literal integer or a `$VAR_NAME` reference to a variable that holds the limit value. |
+
+> **Note:** A command with quota enforcement is only valid in `.rw` wrappers. Quota state is tracked in `~/.local/share/saran/quotas.yaml` and must be reset between sessions with `saran quotas reset`.
+
 ### `commands`
 **Required.** A map of subcommand names to their definitions. Each key becomes a subcommand in the generated `clap` CLI. See [Command Definition](#command-definition) below.
 
@@ -480,6 +500,12 @@ Saran must reject a malformed wrapper file with a descriptive error. The followi
 - An `args` `var_name` is a prefix of another `args` `var_name` within the same command, as this would cause ambiguous parsing in `$VAR_NAME` substitution
 - A required `args` entry appears after an optional one in the same command
 - A `required: true` `vars:` entry has no value in any resolution layer at startup (runtime error, not a parse error)
+- A `quotas:` entry is missing `command` or `limit`
+- A `quotas:` `command` references a command that does not exist in `commands:`
+- A `quotas:` entry has a `limit` that is neither a valid integer nor a `$VAR_NAME` reference
+- A `$VAR_NAME` limit in `quotas:` references a variable not declared in `vars:`
+- A wrapper declares `quotas:` but is not suffixed with `.quota` (the name must end with `.quota` for quota-bounded wrappers)
+- A wrapper has `.quota` suffix but does not declare a `quotas:` block
 
 ---
 

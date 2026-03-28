@@ -195,6 +195,63 @@ saran validate ./gh-pr.repo.ro.yaml
 
 ---
 
+## `saran quotas`
+
+Manages quota state for quota-bounded wrappers. Quotas track how many times a quota-guarded command can be executed within a session.
+
+### Read: `saran quotas`
+
+Lists all quota states for all installed quota-bounded wrappers:
+
+```
+$ saran quotas
+
+gh-pr-comment.pr.rw.quota:
+  comment: 1/1 remaining
+
+glab-mr-note.mr.rw.quota:
+  note: 3/5 remaining
+  resolve: 5/5 remaining
+  unresolve: 5/5 remaining
+```
+
+### Read: `saran quotas <wrapper>`
+
+Lists quota state for a single wrapper:
+
+```
+$ saran quotas gh-pr-comment.pr.rw.quota
+
+gh-pr-comment.pr.rw.quota:
+  comment: 1/1 remaining
+```
+
+### Reset: `saran quotas reset <wrapper>`
+
+Resets all quotas for a specific wrapper to their configured limits. This is typically called at the start of a new session:
+
+```bash
+saran quotas reset gh-pr-comment.pr.rw.quota
+# → Reset gh-pr-comment.pr.rw.quota: comment -> 1
+```
+
+### Reset All: `saran quotas reset-all`
+
+Resets quotas for all quota-bounded wrappers:
+
+```bash
+saran quotas reset-all
+# → Reset 3 wrappers: gh-pr-comment.pr.rw.quota, glab-mr-note.mr.rw.quota, redis-cli-string-set.key.rw.quota
+```
+
+### Flags
+
+| Flag | Description |
+|---|---|
+| `--json` | Output in JSON format for programmatic consumption |
+
+---
+
 ## Data Directory
 
 All Saran state lives under `~/.local/share/saran/` by default:
@@ -204,6 +261,7 @@ All Saran state lives under `~/.local/share/saran/` by default:
   bin/          Compiled wrapper binaries (add to PATH)
   wrappers/     Source YAML files (for regeneration, inspection)
   env.yaml      Operator-managed variable configuration
+  quotas.yaml   Quota state tracking (one file per wrapper)
 ```
 
 The data directory can be overridden by setting the `SARAN_DATA_DIR` environment variable:

@@ -113,7 +113,7 @@ Examples are organized by the CLI they wrap under `spec/examples/`.
 
 | File | Description |
 |---|---|
-| [`spec/examples/redis-cli/redis-cli-info.server.ro.yaml`](spec/examples/redis-cli/redis-cli-info.server.ro.yaml) | Server-scoped read-only wrapper for `redis-cli` — exposes `ping`, `info-server`, `info-memory`, and `dbsize` against a fixed host/port/db |
+| [`spec/examples/redis-cli/redis-cli-info.db.ro.yaml`](spec/examples/redis-cli/redis-cli-info.db.ro.yaml) | DB-scoped read-only wrapper for `redis-cli` — exposes `ping`, `info`, and `dbsize` against a fixed host/port/db |
 | [`spec/examples/redis-cli/redis-cli-key-meta.prefix.ro.yaml`](spec/examples/redis-cli/redis-cli-key-meta.prefix.ro.yaml) | Prefix-scoped read-only wrapper for `redis-cli` — exposes `scan`, `type`, `ttl`, and `exists` only for keys under `REDIS_KEY_PREFIX` |
 | [`spec/examples/redis-cli/redis-cli-string-set.key.rw.quota.yaml`](spec/examples/redis-cli/redis-cli-string-set.key.rw.quota.yaml) | Key-scoped wrapper for `redis-cli` with fixed-key `get` plus quota-guarded `set` — configured via `REDIS_KEY` and `REDIS_SET_QUOTA` |
 

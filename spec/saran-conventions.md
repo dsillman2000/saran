@@ -80,6 +80,9 @@ Only name the deepest fixed resource.
 | `issue` | `GH_REPO` + `GH_ISSUE` / `GLAB_REPO` + `GLAB_ISSUE` | `gh-issue-comment.issue.rw.quota`, `glab-issue-note.issue.rw.quota` |
 | `branch` | `GLAB_REPO` + `GLAB_BRANCH` | `glab-ci.branch.ro` |
 | `run` | `GH_REPO` + `GH_RUN_ID` | `gh-run-view.run.ro` *(hypothetical)* |
+| `key` | `REDIS_KEY` *(plus host/port/db)* | `redis-cli-string-set.key.rw.quota` |
+| `prefix` | `REDIS_KEY_PREFIX` *(plus host/port/db)* | `redis-cli-key-meta.prefix.ro` |
+| `db` | `REDIS_DB` *(plus host/port)* | `redis-cli-info.db.ro` |
 
 Scope tokens are always lowercase and match a natural resource name, not a variable name.
 
