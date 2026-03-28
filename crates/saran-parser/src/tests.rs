@@ -881,3 +881,276 @@ saran_test!("AR-10", test_ar_valid_arguments, {
     let cmd = wrapper.commands.get("show").unwrap();
     assert_eq!(cmd.args.len(), 2, "Expected 2 args declared");
 });
+
+// ============================================================================
+// Phase 2C.1: Variable Reference Tests (VR-01 through VR-06)
+// ============================================================================
+
+saran_test!("VR-01", test_vr_undeclared_var_in_action, {
+    let yaml = load_fixture("vr-all.yaml", "vr-01-undeclared-var-in-action");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for undeclared var"
+    );
+    let errors = result.unwrap_err();
+    assert_eq!(errors.len(), 1, "Expected exactly one error");
+
+    match &errors[0] {
+        ValidationError::UndeclaredReference { var_name, .. } => {
+            assert_eq!(var_name, "UNDECLARED", "Expected UNDECLARED error");
+        }
+        _ => panic!("Expected UndeclaredReference error, got: {:?}", errors[0]),
+    }
+});
+
+saran_test!("VR-02", test_vr_invalid_dollar_syntax, {
+    let yaml = load_fixture("vr-all.yaml", "vr-02-invalid-dollar-syntax");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for invalid $ syntax"
+    );
+    let errors = result.unwrap_err();
+    assert_eq!(errors.len(), 1, "Expected exactly one error");
+
+    match &errors[0] {
+        ValidationError::InvalidFormat { reason, .. } => {
+            assert!(
+                reason.contains("Invalid $VAR_NAME syntax"),
+                "Expected invalid syntax error"
+            );
+        }
+        _ => panic!("Expected InvalidFormat error, got: {:?}", errors[0]),
+    }
+});
+
+saran_test!("VR-03", test_vr_digit_after_dollar, {
+    let yaml = load_fixture("vr-all.yaml", "vr-03-digit-after-dollar");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for digit after $"
+    );
+    let errors = result.unwrap_err();
+    assert_eq!(errors.len(), 1, "Expected exactly one error");
+
+    match &errors[0] {
+        ValidationError::InvalidFormat { reason, .. } => {
+            assert!(
+                reason.contains("Invalid $VAR_NAME syntax"),
+                "Expected invalid syntax error"
+            );
+        }
+        _ => panic!("Expected InvalidFormat error, got: {:?}", errors[0]),
+    }
+});
+
+saran_test!("VR-04", test_vr_arg_in_help, {
+    let yaml = load_fixture("vr-all.yaml", "vr-04-arg-in-help");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for arg var in help"
+    );
+    let errors = result.unwrap_err();
+    assert!(
+        errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::UndeclaredReference { .. })),
+        "Expected UndeclaredReference error for arg var in help"
+    );
+});
+
+saran_test!("VR-05", test_vr_undeclared_var_in_help, {
+    let yaml = load_fixture("vr-all.yaml", "vr-05-undeclared-var-in-help");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for undeclared var in help"
+    );
+    let errors = result.unwrap_err();
+    assert_eq!(errors.len(), 1, "Expected exactly one error");
+
+    match &errors[0] {
+        ValidationError::UndeclaredReference { var_name, .. } => {
+            assert_eq!(var_name, "UNDECLARED", "Expected UNDECLARED error");
+        }
+        _ => panic!("Expected UndeclaredReference error, got: {:?}", errors[0]),
+    }
+});
+
+saran_test!("VR-06", test_vr_valid_references, {
+    let yaml = load_fixture("vr-all.yaml", "vr-06-valid-references");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_ok(),
+        "Expected validation to succeed for valid references, got: {:?}",
+        result
+    );
+    let wrapper = result.unwrap();
+    assert_eq!(wrapper.name, "test-wrapper");
+});
+
+// ============================================================================
+// Phase 2C.2: Requires Section Validation Tests (RE-01 through RE-09)
+// ============================================================================
+
+saran_test!("RE-01", test_re_missing_cli, {
+    let yaml = load_fixture("re-all.yaml", "re-01-missing-cli");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for missing cli"
+    );
+    let errors = result.unwrap_err();
+    assert!(
+        errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::MissingField { field: "cli", .. })),
+        "Expected MissingField error for cli"
+    );
+});
+
+saran_test!("RE-02", test_re_missing_version, {
+    let yaml = load_fixture("re-all.yaml", "re-02-missing-version");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for missing version"
+    );
+    let errors = result.unwrap_err();
+    assert!(
+        errors.iter().any(|e| matches!(
+            e,
+            ValidationError::MissingField {
+                field: "version",
+                ..
+            }
+        )),
+        "Expected MissingField error for version"
+    );
+});
+
+saran_test!("RE-03", test_re_invalid_semver_constraint, {
+    let yaml = load_fixture("re-all.yaml", "re-03-invalid-semver-constraint");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for invalid semver"
+    );
+    let errors = result.unwrap_err();
+    assert!(
+        errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::SemverParseError { .. })),
+        "Expected SemverParseError for invalid constraint"
+    );
+});
+
+saran_test!("RE-04", test_re_version_probe_not_array, {
+    let yaml = load_fixture("re-all.yaml", "re-04-version-probe-not-array");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for non-array version_probe"
+    );
+    // Note: serde_yaml will reject string for Vec field at parse time
+    // This test passes if YAML parse error occurs
+    let _errors = result.unwrap_err();
+});
+
+saran_test!("RE-05", test_re_version_probe_empty, {
+    let yaml = load_fixture("re-all.yaml", "re-05-version-probe-empty");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for empty version_probe"
+    );
+    let errors = result.unwrap_err();
+    assert!(
+        errors
+            .iter()
+            .any(|e| e.to_string().contains("version_probe")),
+        "Expected error about empty version_probe"
+    );
+});
+
+saran_test!("RE-06", test_re_invalid_regex, {
+    let yaml = load_fixture("re-all.yaml", "re-06-invalid-regex");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for invalid regex"
+    );
+    let errors = result.unwrap_err();
+    assert!(
+        errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::RegexCompileError { .. })),
+        "Expected RegexCompileError for invalid regex"
+    );
+});
+
+saran_test!("RE-07", test_re_regex_no_capture, {
+    let yaml = load_fixture("re-all.yaml", "re-07-regex-no-capture");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for regex without capture group"
+    );
+    let errors = result.unwrap_err();
+    assert!(
+        errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::InvalidValue { .. })),
+        "Expected InvalidValue error for capture group mismatch"
+    );
+});
+
+saran_test!("RE-08", test_re_duplicate_cli, {
+    let yaml = load_fixture("re-all.yaml", "re-08-duplicate-cli");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_err(),
+        "Expected validation to fail for duplicate cli"
+    );
+    let errors = result.unwrap_err();
+    assert!(
+        errors
+            .iter()
+            .any(|e| matches!(e, ValidationError::DuplicateKey { .. })),
+        "Expected DuplicateKey error for duplicate cli"
+    );
+});
+
+saran_test!("RE-09", test_re_valid_requires, {
+    let yaml = load_fixture("re-all.yaml", "re-09-valid-requires");
+    let result = validate_wrapper(&yaml);
+
+    assert!(
+        result.is_ok(),
+        "Expected validation to succeed for valid requires, got: {:?}",
+        result
+    );
+    let wrapper = result.unwrap();
+    assert_eq!(wrapper.name, "test-wrapper");
+    assert!(
+        !wrapper.requires.is_empty(),
+        "Expected requires section to be present"
+    );
+});

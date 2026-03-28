@@ -1,0 +1,116 @@
+# Requires Section Validation Tests (RE-01 through RE-09)
+# Each key is a complete wrapper definition for testing requires validation
+
+re-01-missing-cli:
+  name: "test-wrapper"
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: []
+  requires:
+    - version: ">=1.0.0"  # RE-01: missing cli field
+
+re-02-missing-version:
+  name: "test-wrapper"
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: []
+  requires:
+    - cli: "gh"  # RE-02: missing version field
+
+re-03-invalid-semver-constraint:
+  name: "test-wrapper"
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: []
+  requires:
+    - cli: "gh"
+      version: "not-semver"  # RE-03: invalid semver constraint
+
+re-04-version-probe-not-array:
+  name: "test-wrapper"
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: []
+  requires:
+    - cli: "gh"
+      version: ">=1.0.0"
+      version_probe: "gh --version"  # RE-04: string instead of array
+
+re-05-version-probe-empty:
+  name: "test-wrapper"
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: []
+  requires:
+    - cli: "gh"
+      version: ">=1.0.0"
+      version_probe: []  # RE-05: empty array
+
+re-06-invalid-regex:
+  name: "test-wrapper"
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: []
+  requires:
+    - cli: "gh"
+      version: ">=1.0.0"
+      version_pattern: "["  # RE-06: invalid regex (unmatched bracket)
+
+re-07-regex-no-capture:
+  name: "test-wrapper"
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: []
+  requires:
+    - cli: "gh"
+      version: ">=1.0.0"
+      version_pattern: "version \\S+"  # RE-07: regex has 0 capture groups (needs 1)
+
+re-08-duplicate-cli:
+  name: "test-wrapper"
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: []
+  requires:
+    - cli: "gh"
+      version: ">=1.0.0"
+    - cli: "gh"  # RE-08: duplicate cli name
+      version: ">=2.0.0"
+
+re-09-valid-requires:
+  name: "test-wrapper"
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: []
+  requires:
+    - cli: "gh"
+      version: ">=1.0.0,<2.0.0"
+      version_probe: ["gh", "--version"]
+      version_pattern: "gh version (\\d+\\.\\d+\\.\\d+)"  # RE-09: valid requires (1 capture group)

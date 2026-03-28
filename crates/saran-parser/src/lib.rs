@@ -1153,17 +1153,190 @@ pub fn validate_top_level(wrapper: &saran_types::WrapperDefinition) -> Vec<Valid
     errors
 }
 
-/// Main validation entry point.
+// ============================================================================
+// Phase 2C: Variable References Validation
+// ============================================================================
+
+/// Validate all `$VAR_NAME` token references in action args and variable help text.
 ///
-/// Deserializes YAML and validates the complete wrapper definition.
-/// Returns all errors collected during validation, or the validated `WrapperDefinition`.
+/// Checks:
+/// * Action args can only reference variables declared in `vars:` section
+/// * Variable help text can only reference variables declared in `vars:` section
+/// * Token syntax must be valid (`$VAR_NAME` format)
 ///
-/// # Arguments
-/// * `yaml_str` - The YAML content to parse and validate
+/// Uses Phase 1's `parse_tokens()` to extract and validate token syntax.
+fn validate_variable_references(
+    wrapper: &saran_types::WrapperDefinition,
+    ctx: &ValidationContext,
+) -> Vec<ValidationError> {
+    let mut errors = Vec::new();
+
+    // Check all action arg references
+    for (cmd_name, command) in &wrapper.commands {
+        for (action_idx, action) in command.actions.iter().enumerate() {
+            for (arg_idx, arg) in action.args.iter().enumerate() {
+                // Parse tokens from the arg string
+                match parse_tokens(arg) {
+                    Ok(parsed) => {
+                        // Check each token against declared vars
+                        for token in &parsed.tokens {
+                            if !ctx.declared_vars.contains(&token.var_name) {
+                                errors.push(ValidationError::UndeclaredReference {
+                                    path: format!(
+                                        "commands.{}.actions[{}].args[{}]",
+                                        cmd_name, action_idx, arg_idx
+                                    ),
+                                    var_name: token.var_name.clone(),
+                                });
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        // Token parsing failed - invalid syntax
+                        errors.push(ValidationError::InvalidFormat {
+                            path: format!(
+                                "commands.{}.actions[{}].args[{}]",
+                                cmd_name, action_idx, arg_idx
+                            ),
+                            reason: format!("Invalid $VAR_NAME syntax: {}", e),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    // Check all variable help text references
+    if !wrapper.vars.is_empty() {
+        for (var_idx, var_decl) in wrapper.vars.iter().enumerate() {
+            if let Some(help_text) = &var_decl.help {
+                // Parse tokens from help text
+                match parse_tokens(help_text) {
+                    Ok(parsed) => {
+                        // Check each token against declared vars
+                        // (Simpler design: help text can only reference vars, not args)
+                        for token in &parsed.tokens {
+                            if !ctx.declared_vars.contains(&token.var_name) {
+                                errors.push(ValidationError::UndeclaredReference {
+                                    path: format!("vars[{}].help", var_idx),
+                                    var_name: token.var_name.clone(),
+                                });
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        // Token parsing failed - invalid syntax
+                        errors.push(ValidationError::InvalidFormat {
+                            path: format!("vars[{}].help", var_idx),
+                            reason: format!("Invalid $VAR_NAME syntax: {}", e),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    errors
+}
+
+// ============================================================================
+// Phase 2C: Requires Section Validation
+// ============================================================================
+
+/// Validate the `requires:` section of a wrapper definition.
 ///
-/// # Returns
-/// * `Ok(WrapperDefinition)` if validation passes
-/// * `Err(Vec<ValidationError>)` containing all validation errors
+/// Checks:
+/// - All required fields present (`cli`, `version`)
+/// - Version constraint is valid SemVer format
+/// - Version probe is an array (if present) and non-empty
+/// - Version pattern is valid regex with exactly 1 capture group (if present)
+/// - No duplicate CLI names
+///
+/// Reuses Phase 2A helpers: `validate_semver_constraint()`, `validate_regex()`,
+/// `validate_regex_capture_groups()`.
+fn validate_requires(requires: &[saran_types::CliRequirement]) -> Vec<ValidationError> {
+    let mut errors = Vec::new();
+
+    // Early exit if requires section is empty
+    if requires.is_empty() {
+        return errors;
+    }
+
+    // Track seen CLI names for duplicate detection
+    let mut seen_clis = std::collections::HashSet::new();
+
+    for (idx, req) in requires.iter().enumerate() {
+        let path = format!("requires[{}]", idx);
+
+        // RE-01: Check cli field is present
+        if req.cli.is_none() || req.cli.as_ref().map(|s| s.is_empty()).unwrap_or(false) {
+            errors.push(ValidationError::MissingField {
+                path: path.clone(),
+                field: "cli",
+            });
+        } else if let Some(cli) = &req.cli {
+            // RE-08: Check for duplicate CLI names
+            if !seen_clis.insert(cli.clone()) {
+                errors.push(ValidationError::DuplicateKey {
+                    path: path.clone(),
+                    key: cli.clone(),
+                });
+            }
+        }
+
+        // RE-02: Check version field is present
+        if req.version.is_none() || req.version.as_ref().map(|s| s.is_empty()).unwrap_or(false) {
+            errors.push(ValidationError::MissingField {
+                path: path.clone(),
+                field: "version",
+            });
+            continue; // Skip further validation if version is missing
+        }
+
+        // RE-03: Validate version constraint format
+        if let Some(version) = &req.version {
+            if let Err(e) = validate_semver_constraint(version) {
+                errors.push(ValidationError::SemverParseError {
+                    value: version.clone(),
+                    error: e,
+                });
+            }
+        }
+
+        // RE-04, RE-05: Validate version_probe if present
+        if let Some(probe) = &req.version_probe {
+            if probe.is_empty() {
+                errors.push(ValidationError::InvalidFormat {
+                    path: format!("{}.version_probe", path),
+                    reason: "must be non-empty array".to_string(),
+                });
+            }
+        }
+
+        // RE-06, RE-07: Validate version_pattern if present
+        if let Some(pattern) = &req.version_pattern {
+            // RE-06: Check regex is valid
+            if let Err(e) = validate_regex(pattern) {
+                errors.push(ValidationError::RegexCompileError {
+                    pattern: pattern.clone(),
+                    error: e,
+                });
+            } else {
+                // RE-07: Check for exactly 1 capture group
+                if let Err(e) = validate_regex_capture_groups(pattern) {
+                    errors.push(ValidationError::InvalidValue {
+                        path: format!("{}.version_pattern", path),
+                        expected: "exactly 1 capture group".to_string(),
+                        found: e,
+                    });
+                }
+            }
+        }
+    }
+
+    errors
+}
+
 pub fn validate_wrapper(
     yaml_str: &str,
 ) -> Result<saran_types::WrapperDefinition, Vec<ValidationError>> {
@@ -1195,6 +1368,15 @@ pub fn validate_wrapper(
 
     // 2B.4: Positional arguments
     validate_args_all(&wrapper.commands, &mut context);
+
+    // Phase 2C validators
+    // 2C.1: Variable references
+    context
+        .errors
+        .extend(validate_variable_references(&wrapper, &context));
+
+    // 2C.2: Requires section
+    context.errors.extend(validate_requires(&wrapper.requires));
 
     context.collect_errors().map(|_| wrapper)
 }

@@ -55,11 +55,13 @@ pub struct WrapperDefinition {
 pub struct CliRequirement {
     /// The executable name to check (e.g., `gh`, `redis-cli`).
     /// Must satisfy `[a-z0-9_-]+`.
-    pub cli: String,
+    #[serde(default)]
+    pub cli: Option<String>,
 
     /// A semver constraint string (e.g., `">=2.0.0"`, `">=1.0.0 <3.0.0"`).
     /// Supports operators: `>=`, `>`, `<=`, `<`, `=`.
-    pub version: String,
+    #[serde(default)]
+    pub version: Option<String>,
 
     /// Override the command used to query the CLI's version.
     /// Defaults to `[cli, --version]`.

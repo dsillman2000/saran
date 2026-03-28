@@ -1,0 +1,82 @@
+# Variable Reference Validation Tests (VR-01 through VR-06)
+# Each key is a complete wrapper definition for testing variable references
+
+vr-01-undeclared-var-in-action:
+  name: "test-wrapper"
+  version: "1.0.0"
+  vars:
+    - name: OWNER
+      required: true
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: ["$UNDECLARED"]  # VR-01: $UNDECLARED not in vars
+
+vr-02-invalid-dollar-syntax:
+  name: "test-wrapper"
+  version: "1.0.0"
+  vars:
+    - name: OWNER
+      required: true
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: ["prefix$"]  # VR-02: bare $ with no valid var name
+
+vr-03-digit-after-dollar:
+  name: "test-wrapper"
+  version: "1.0.0"
+  vars:
+    - name: OWNER
+      required: true
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: ["$1VAR"]  # VR-03: digit immediately after $
+
+vr-04-arg-in-help:
+  name: "test-wrapper"
+  version: "1.0.0"
+  vars:
+    - name: OWNER
+      required: true
+      help: "$PR_NUM is the pull request number"  # VR-04: PR_NUM only in args, not in vars
+  commands:
+    list:
+      args:
+        - name: pr-num
+          var_name: PR_NUM
+          type: str
+          required: true
+      actions:
+        - executable: "gh"
+          args: []
+
+vr-05-undeclared-var-in-help:
+  name: "test-wrapper"
+  version: "1.0.0"
+  vars:
+    - name: OWNER
+      required: true
+      help: "Repository owner. Use $UNDECLARED to specify."  # VR-05: $UNDECLARED not declared
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: []
+
+vr-06-valid-references:
+  name: "test-wrapper"
+  version: "1.0.0"
+  vars:
+    - name: REPO
+      required: true
+      help: "Repository name (e.g., $REPO)"  # Valid: $REPO is declared in vars
+  commands:
+    list:
+      actions:
+        - executable: "gh"
+          args: ["$REPO"]  # Valid: $REPO is declared in vars
