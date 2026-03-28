@@ -156,3 +156,149 @@ fn test_only_literals() {
         .iter()
         .any(|l| l.text.contains("hello world")));
 }
+
+// ============================================================================
+// Phase 2A: Top-Level Validation Tests (TL-01 through TL-08)
+// ============================================================================
+
+use crate::{validate_wrapper, ValidationError};
+
+saran_test!("TL-01", test_missing_name_field, {
+    let yaml = include_str!("../tests/fixtures/tl-01-missing-name.yaml");
+    let result = validate_wrapper(yaml);
+
+    assert!(result.is_err(), "Expected validation to fail");
+    let errors = result.unwrap_err();
+    assert_eq!(errors.len(), 1, "Expected exactly one error");
+
+    match &errors[0] {
+        ValidationError::InvalidFormat { reason, .. } => {
+            assert!(
+                reason.contains("name"),
+                "Expected error related to missing 'name' field"
+            );
+        }
+        _ => panic!("Expected InvalidFormat error, got: {:?}", errors[0]),
+    }
+});
+
+saran_test!("TL-02", test_empty_name_field, {
+    let yaml = include_str!("../tests/fixtures/tl-02-empty-name.yaml");
+    let result = validate_wrapper(yaml);
+
+    assert!(result.is_err(), "Expected validation to fail");
+    let errors = result.unwrap_err();
+    assert_eq!(errors.len(), 1, "Expected exactly one error");
+
+    match &errors[0] {
+        ValidationError::MissingField { field, .. } => {
+            assert_eq!(*field, "name", "Expected missing 'name' field error");
+        }
+        _ => panic!("Expected MissingField error, got: {:?}", errors[0]),
+    }
+});
+
+saran_test!("TL-03", test_missing_version_field, {
+    let yaml = include_str!("../tests/fixtures/tl-03-missing-version.yaml");
+    let result = validate_wrapper(yaml);
+
+    assert!(result.is_err(), "Expected validation to fail");
+    let errors = result.unwrap_err();
+    assert_eq!(errors.len(), 1, "Expected exactly one error");
+
+    match &errors[0] {
+        ValidationError::InvalidFormat { reason, .. } => {
+            assert!(
+                reason.contains("version"),
+                "Expected error related to missing 'version' field"
+            );
+        }
+        _ => panic!("Expected InvalidFormat error, got: {:?}", errors[0]),
+    }
+});
+
+saran_test!("TL-04", test_invalid_semver, {
+    let yaml = include_str!("../tests/fixtures/tl-04-invalid-semver.yaml");
+    let result = validate_wrapper(yaml);
+
+    assert!(result.is_err(), "Expected validation to fail");
+    let errors = result.unwrap_err();
+    assert_eq!(errors.len(), 1, "Expected exactly one error");
+
+    match &errors[0] {
+        ValidationError::SemverParseError { value, .. } => {
+            assert_eq!(value, "not-semver", "Expected SemVer parse error");
+        }
+        _ => panic!("Expected SemverParseError, got: {:?}", errors[0]),
+    }
+});
+
+saran_test!("TL-05", test_valid_semver_with_prerelease, {
+    let yaml = include_str!("../tests/fixtures/tl-05-valid-prerelease.yaml");
+    let result = validate_wrapper(yaml);
+
+    assert!(
+        result.is_ok(),
+        "Expected validation to succeed, got: {:?}",
+        result
+    );
+    let wrapper = result.unwrap();
+    assert_eq!(wrapper.name, "test-wrapper");
+    assert_eq!(wrapper.version, "1.0.0-beta.1");
+});
+
+saran_test!("TL-06", test_missing_commands_section, {
+    let yaml = include_str!("../tests/fixtures/tl-06-missing-commands.yaml");
+    let result = validate_wrapper(yaml);
+
+    assert!(result.is_err(), "Expected validation to fail");
+    let errors = result.unwrap_err();
+    assert_eq!(errors.len(), 1, "Expected exactly one error");
+
+    match &errors[0] {
+        ValidationError::InvalidFormat { reason, .. } => {
+            assert!(
+                reason.contains("commands"),
+                "Expected error related to missing 'commands' field"
+            );
+        }
+        _ => panic!("Expected InvalidFormat error, got: {:?}", errors[0]),
+    }
+});
+
+saran_test!("TL-07", test_empty_commands_section, {
+    let yaml = include_str!("../tests/fixtures/tl-07-empty-commands.yaml");
+    let result = validate_wrapper(yaml);
+
+    assert!(result.is_err(), "Expected validation to fail");
+    let errors = result.unwrap_err();
+    assert_eq!(errors.len(), 1, "Expected exactly one error");
+
+    match &errors[0] {
+        ValidationError::MissingField { field, .. } => {
+            assert_eq!(
+                *field, "commands",
+                "Expected missing 'commands' field error"
+            );
+        }
+        _ => panic!("Expected MissingField error, got: {:?}", errors[0]),
+    }
+});
+
+saran_test!("TL-08", test_valid_minimal_wrapper, {
+    let yaml = include_str!("../tests/fixtures/tl-08-valid-minimal.yaml");
+    let result = validate_wrapper(yaml);
+
+    assert!(
+        result.is_ok(),
+        "Expected validation to succeed, got: {:?}",
+        result
+    );
+    let wrapper = result.unwrap();
+    assert_eq!(wrapper.name, "test-wrapper");
+    assert_eq!(wrapper.version, "1.0.0");
+    assert!(
+        !wrapper.commands.is_empty(),
+        "Expected at least one command"
+    );
+});

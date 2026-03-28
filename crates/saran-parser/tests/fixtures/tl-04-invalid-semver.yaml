@@ -1,0 +1,11 @@
+# TL-04: Invalid SemVer 'version'
+# Expected: ValidationError::SemverParseError
+
+name: "test-wrapper"
+version: "not-semver"
+commands:
+  test:
+    actions:
+      - executable: "echo"
+        args: []
+

@@ -1,0 +1,11 @@
+# TL-02: Empty 'name' field
+# Expected: ValidationError::MissingField with field="name"
+
+name: ""
+version: "1.0.0"
+commands:
+  test:
+    actions:
+      - executable: "echo"
+        args: []
+

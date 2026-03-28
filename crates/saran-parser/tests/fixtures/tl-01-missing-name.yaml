@@ -1,0 +1,10 @@
+# TL-01: Missing required 'name' field
+# Expected: ValidationError::MissingField with field="name"
+
+version: "1.0.0"
+commands:
+  test:
+    actions:
+      - executable: "echo"
+        args: []
+
