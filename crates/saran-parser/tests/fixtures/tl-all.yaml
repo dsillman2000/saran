@@ -1,0 +1,63 @@
+# Consolidated Top-Level Validation Tests
+# Each key represents a test case (TL-01 through TL-08)
+
+tl-01-missing-name:
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: "echo"
+          args: []
+
+tl-02-empty-name:
+  name: ""
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: "echo"
+          args: []
+
+tl-03-missing-version:
+  name: "test-wrapper"
+  commands:
+    test:
+      actions:
+        - executable: "echo"
+          args: []
+
+tl-04-invalid-semver:
+  name: "test-wrapper"
+  version: "not-semver"
+  commands:
+    test:
+      actions:
+        - executable: "echo"
+          args: []
+
+tl-05-valid-prerelease:
+  name: "test-wrapper"
+  version: "1.0.0-beta.1"
+  commands:
+    test:
+      actions:
+        - executable: "echo"
+          args: []
+
+tl-06-missing-commands:
+  name: "test-wrapper"
+  version: "1.0.0"
+
+tl-07-empty-commands:
+  name: "test-wrapper"
+  version: "1.0.0"
+  commands: {}
+
+tl-08-valid-minimal:
+  name: "test-wrapper"
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: "echo"
+          args: []

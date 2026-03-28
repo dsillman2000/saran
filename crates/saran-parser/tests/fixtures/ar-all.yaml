@@ -1,0 +1,155 @@
+# AR-01: Missing `name` in arg
+AR-01:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    show:
+      args:
+        - var_name: FOO
+          arg_type: "str"
+      actions:
+        - executable: echo
+          args: []
+
+# AR-02: Missing `var_name` in arg
+AR-02:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    show:
+      args:
+        - name: foo
+          arg_type: "str"
+      actions:
+        - executable: echo
+          args: []
+
+# AR-03: Missing `type` in arg
+AR-03:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    show:
+      args:
+        - name: foo
+          var_name: FOO
+      actions:
+        - executable: echo
+          args: []
+
+# AR-04: Invalid arg type (not str)
+AR-04:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    show:
+      args:
+        - name: foo
+          var_name: FOO
+          arg_type: "int"
+      actions:
+        - executable: echo
+          args: []
+
+# AR-05: Invalid arg name format (contains space)
+AR-05:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    show:
+      args:
+        - name: "bad name"
+          var_name: FOO
+          arg_type: "str"
+      actions:
+        - executable: echo
+          args: []
+
+# AR-06: Duplicate arg names and var_names
+AR-06:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    show:
+      args:
+        - name: foo
+          var_name: FOO
+          arg_type: "str"
+        - name: foo
+          var_name: BAR
+          arg_type: "str"
+      actions:
+        - executable: echo
+          args: []
+
+# AR-07: Arg `var_name` conflicts with var
+AR-07:
+  name: test-wrapper
+  version: "1.0.0"
+  vars:
+    - name: GH_REPO
+      required: true
+  commands:
+    show:
+      args:
+        - name: repo
+          var_name: GH_REPO
+          arg_type: "str"
+      actions:
+        - executable: echo
+          args: []
+
+# AR-08: Required arg after optional arg
+AR-08:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    show:
+      args:
+        - name: optional
+          var_name: OPT
+          arg_type: "str"
+          required: false
+        - name: required
+          var_name: REQ
+          arg_type: "str"
+          required: true
+      actions:
+        - executable: echo
+          args: []
+
+# AR-09: Prefix `var_name` conflict
+AR-09:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    show:
+      args:
+        - name: foo
+          var_name: FOO
+          arg_type: "str"
+        - name: foobar
+          var_name: FOO_BAR
+          arg_type: "str"
+      actions:
+        - executable: echo
+          args: []
+
+# AR-10: Valid argument declarations
+AR-10:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    show:
+      args:
+        - name: repo
+          var_name: GH_REPO
+          arg_type: "str"
+          required: true
+        - name: issue
+          var_name: GH_ISSUE
+          arg_type: "str"
+          required: false
+      actions:
+        - executable: gh
+          args: ["issue", "view"]

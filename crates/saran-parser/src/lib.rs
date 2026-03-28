@@ -631,6 +631,481 @@ pub fn check_prefix_conflicts(names: &[String]) -> Vec<(String, String)> {
 }
 
 // ============================================================================
+// Phase 2B: Context-Aware Validation
+// ============================================================================
+
+/// Validate all variable declarations in the `vars:` section.
+///
+/// Checks:
+/// - Each var name matches format [A-Za-z_][A-Za-z0-9_]*
+/// - No duplicate var names
+/// - required and default are mutually exclusive
+/// - Neither required nor default is specified (ambiguous optionality)
+/// - No prefix conflicts (e.g., VAR and VAR_SUFFIX)
+///
+/// Updates context.errors and populates context.declared_vars
+pub fn validate_vars(vars: &[saran_types::VarDecl], context: &mut ValidationContext) {
+    let mut var_names = Vec::new();
+    let mut seen_names = std::collections::HashSet::new();
+
+    for (index, var) in vars.iter().enumerate() {
+        // Check for duplicates before validating
+        if seen_names.contains(&var.name) {
+            context.add_error(ValidationError::DuplicateKey {
+                path: "vars".to_string(),
+                key: var.name.clone(),
+            });
+        }
+        seen_names.insert(var.name.clone());
+
+        validate_var_declaration(var, index, context);
+        var_names.push(var.name.clone());
+    }
+
+    // Check for prefix conflicts
+    let conflicts = check_prefix_conflicts(&var_names);
+    for (prefix, longer) in conflicts {
+        context.add_error(ValidationError::CrossReferenceViolation {
+            path: "vars".to_string(),
+            reason: format!("variable name '{}' is a prefix of '{}'", prefix, longer),
+        });
+    }
+}
+
+/// Validate a single variable declaration.
+fn validate_var_declaration(
+    var: &saran_types::VarDecl,
+    index: usize,
+    context: &mut ValidationContext,
+) {
+    let path = format!("vars[{}]", index);
+
+    // Check name format
+    if let Err(e) = validate_var_name_format(&var.name) {
+        context.add_error(ValidationError::InvalidFormat {
+            path: format!("{}.name", path),
+            reason: e,
+        });
+    }
+
+    // Check required and default are mutually exclusive
+    if var.required && var.default.is_some() {
+        context.add_error(ValidationError::ConflictingFields {
+            path: path.clone(),
+            field1: "required",
+            field2: "default",
+        });
+    }
+
+    // Check that either required or default is set (not both, not neither)
+    if !var.required && var.default.is_none() {
+        context.add_error(ValidationError::CrossReferenceViolation {
+            path: path.clone(),
+            reason: "variable must either have required: true or a default value (ambiguous optionality)"
+                .to_string(),
+        });
+    }
+
+    // Add to declared vars if no format errors
+    if validate_var_name_format(&var.name).is_ok() {
+        context.declared_vars.insert(var.name.clone());
+    }
+}
+
+/// Validate all commands in the `commands:` section.
+///
+/// Checks:
+/// - Each command name is a valid format (alphanumeric and hyphens, no leading/trailing)
+/// - Each command has `actions` section that is non-empty
+/// - All actions have valid structure
+///
+/// Updates context.errors and populates context.declared_commands
+pub fn validate_commands(
+    commands: &std::collections::BTreeMap<String, saran_types::Command>,
+    context: &mut ValidationContext,
+) {
+    // Commands are part of deserialization, so BTreeMap iteration is safe
+    for (cmd_name, command) in commands {
+        // Validate command name format
+        if let Err(e) = validate_command_name_format(cmd_name) {
+            context.add_error(ValidationError::InvalidFormat {
+                path: format!("commands.{}", cmd_name),
+                reason: e,
+            });
+            continue;
+        }
+
+        // Check that actions exist and are non-empty
+        if command.actions.is_empty() {
+            context.add_error(ValidationError::MissingField {
+                path: format!("commands.{}", cmd_name),
+                field: "actions",
+            });
+            continue;
+        }
+
+        // Validate each action in this command
+        for (action_index, action) in command.actions.iter().enumerate() {
+            validate_action_structure(action, cmd_name, action_index, context);
+        }
+
+        // Add to declared commands if no errors
+        if validate_command_name_format(cmd_name).is_ok() && !command.actions.is_empty() {
+            context.declared_commands.insert(cmd_name.clone());
+        }
+    }
+}
+
+/// Validate a single action's structure.
+fn validate_action_structure(
+    action: &saran_types::Action,
+    command_name: &str,
+    action_index: usize,
+    context: &mut ValidationContext,
+) {
+    let path = format!("commands.{}.actions[{}]", command_name, action_index);
+
+    // Validate executable name (no absolute paths, no special chars)
+    if let Err(e) = validate_executable_name(&action.executable) {
+        context.add_error(ValidationError::InvalidFormat {
+            path: format!("{}.executable", path),
+            reason: e,
+        });
+    }
+}
+
+/// Validate an executable name (no absolute paths, no special chars).
+fn validate_executable_name(name: &str) -> Result<(), String> {
+    if name.is_empty() {
+        return Err("executable name cannot be empty".to_string());
+    }
+
+    // Check for absolute path
+    if name.starts_with('/') {
+        return Err("executable name cannot be an absolute path".to_string());
+    }
+
+    // Check for parent directory reference
+    if name.contains("..") {
+        return Err("executable name cannot contain parent directory reference (..)".to_string());
+    }
+
+    // Check for path separators
+    if name.contains('/') {
+        return Err("executable name cannot contain path separators".to_string());
+    }
+
+    Ok(())
+}
+
+/// Validate all optional flags in all actions across all commands.
+pub fn validate_optional_flags_all(
+    commands: &std::collections::BTreeMap<String, saran_types::Command>,
+    context: &mut ValidationContext,
+) {
+    for (cmd_name, command) in commands {
+        for (action_index, action) in command.actions.iter().enumerate() {
+            validate_optional_flags_in_action(
+                cmd_name,
+                action_index,
+                &action.optional_flags,
+                context,
+            );
+        }
+    }
+}
+
+/// Validate all optional flags in a single action.
+fn validate_optional_flags_in_action(
+    command_name: &str,
+    action_index: usize,
+    flags: &[saran_types::OptionalFlag],
+    context: &mut ValidationContext,
+) {
+    let mut flag_names = std::collections::HashSet::new();
+
+    for (flag_index, flag) in flags.iter().enumerate() {
+        let path = format!(
+            "commands.{}.actions[{}].optional_flags[{}]",
+            command_name, action_index, flag_index
+        );
+
+        // Check that name and type are present
+        if flag.name.is_empty() {
+            context.add_error(ValidationError::MissingField {
+                path: path.clone(),
+                field: "name",
+            });
+        }
+
+        if flag.flag_type.is_empty() {
+            context.add_error(ValidationError::MissingField {
+                path: path.clone(),
+                field: "flag_type",
+            });
+        }
+
+        // Validate flag name format
+        if !flag.name.is_empty() {
+            if let Err(e) = validate_flag_name_format(&flag.name) {
+                context.add_error(ValidationError::InvalidFormat {
+                    path: format!("{}.name", path),
+                    reason: e,
+                });
+            } else {
+                // Check for duplicate flag names
+                if flag_names.contains(&flag.name) {
+                    context.add_error(ValidationError::DuplicateKey {
+                        path: format!(
+                            "commands.{}.actions[{}].optional_flags",
+                            command_name, action_index
+                        ),
+                        key: flag.name.clone(),
+                    });
+                }
+                flag_names.insert(flag.name.clone());
+            }
+        }
+
+        // Validate flag type and related constraints
+        if !flag.flag_type.is_empty() {
+            match flag.flag_type.as_str() {
+                "str" | "int" | "bool" | "enum" => {
+                    // Valid types
+                    // Check enum-specific constraints
+                    if flag.flag_type == "enum" {
+                        if flag.values.is_empty() {
+                            context.add_error(ValidationError::MissingField {
+                                path: format!("{}.values", path),
+                                field: "values",
+                            });
+                        } else {
+                            // Validate enum values
+                            for (val_index, val) in flag.values.iter().enumerate() {
+                                if let Err(e) = validate_enum_value(val) {
+                                    context.add_error(ValidationError::InvalidFormat {
+                                        path: format!("{}.values[{}]", path, val_index),
+                                        reason: e,
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    // Check bool/repeated mutual exclusivity
+                    if flag.flag_type == "bool" && flag.repeated {
+                        context.add_error(ValidationError::ConflictingFields {
+                            path: path.clone(),
+                            field1: "type",
+                            field2: "repeated",
+                        });
+                    }
+                }
+                _ => {
+                    context.add_error(ValidationError::InvalidValue {
+                        path: format!("{}.flag_type", path),
+                        expected: "one of: str, int, bool, enum".to_string(),
+                        found: flag.flag_type.clone(),
+                    });
+                }
+            }
+        }
+
+        // Validate passes_as (must not contain `=`)
+        if let Some(passes_as) = &flag.passes_as {
+            if passes_as.contains('=') {
+                context.add_error(ValidationError::InvalidFormat {
+                    path: format!("{}.passes_as", path),
+                    reason: "passes_as cannot contain '=' character".to_string(),
+                });
+            }
+        }
+    }
+}
+
+/// Validate an enum value format: [a-z0-9][a-z0-9_-]*
+fn validate_enum_value(val: &str) -> Result<(), String> {
+    if val.is_empty() {
+        return Err("enum value cannot be empty".to_string());
+    }
+
+    // First char must be alphanumeric
+    let first = val.chars().next().unwrap();
+    if !first.is_ascii_alphanumeric() {
+        return Err(format!(
+            "enum value must start with alphanumeric character, found '{}'",
+            first
+        ));
+    }
+
+    // Remaining chars must be alphanumeric, underscore, or hyphen
+    for ch in val.chars().skip(1) {
+        if !ch.is_ascii_alphanumeric() && ch != '_' && ch != '-' {
+            return Err(format!(
+                "enum value contains invalid character '{}': only alphanumeric, underscore, and hyphen allowed",
+                ch
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+/// Validate all positional arguments in all commands.
+pub fn validate_args_all(
+    commands: &std::collections::BTreeMap<String, saran_types::Command>,
+    context: &mut ValidationContext,
+) {
+    for (cmd_name, command) in commands {
+        validate_args(cmd_name, &command.args, context);
+    }
+}
+
+/// Validate all positional arguments in a command.
+fn validate_args(
+    command_name: &str,
+    args: &[saran_types::PositionalArg],
+    context: &mut ValidationContext,
+) {
+    let mut arg_names = std::collections::HashSet::new();
+    let mut arg_var_names = Vec::new();
+    let mut seen_arg_var_names = std::collections::HashSet::new();
+
+    for (index, arg) in args.iter().enumerate() {
+        let path = format!("commands.{}.args[{}]", command_name, index);
+
+        // Check required fields
+        if arg.name.is_empty() {
+            context.add_error(ValidationError::MissingField {
+                path: path.clone(),
+                field: "name",
+            });
+        }
+
+        if arg.var_name.is_empty() {
+            context.add_error(ValidationError::MissingField {
+                path: path.clone(),
+                field: "var_name",
+            });
+        }
+
+        if arg.arg_type.is_empty() || arg.arg_type != "str" {
+            context.add_error(ValidationError::InvalidValue {
+                path: format!("{}.arg_type", path),
+                expected: "str".to_string(),
+                found: arg.arg_type.clone(),
+            });
+        }
+
+        // Validate arg name format
+        if !arg.name.is_empty() {
+            if let Err(e) = validate_arg_name_format(&arg.name) {
+                context.add_error(ValidationError::InvalidFormat {
+                    path: format!("{}.name", path),
+                    reason: e,
+                });
+            } else {
+                // Check for duplicate arg names
+                if arg_names.contains(&arg.name) {
+                    context.add_error(ValidationError::DuplicateKey {
+                        path: format!("commands.{}.args", command_name),
+                        key: arg.name.clone(),
+                    });
+                }
+                arg_names.insert(arg.name.clone());
+            }
+        }
+
+        // Validate var_name format
+        if !arg.var_name.is_empty() {
+            if let Err(e) = validate_var_name_format(&arg.var_name) {
+                context.add_error(ValidationError::InvalidFormat {
+                    path: format!("{}.var_name", path),
+                    reason: e,
+                });
+            } else {
+                // Check for duplicate var_names
+                if seen_arg_var_names.contains(&arg.var_name) {
+                    context.add_error(ValidationError::DuplicateKey {
+                        path: format!("commands.{}.args", command_name),
+                        key: arg.var_name.clone(),
+                    });
+                }
+                seen_arg_var_names.insert(arg.var_name.clone());
+                arg_var_names.push(arg.var_name.clone());
+
+                // Check for conflict with declared vars
+                if context.declared_vars.contains(&arg.var_name) {
+                    context.add_error(ValidationError::CrossReferenceViolation {
+                        path: format!("{}.var_name", path),
+                        reason: format!(
+                            "argument var_name '{}' conflicts with declared variable",
+                            arg.var_name
+                        ),
+                    });
+                }
+            }
+        }
+    }
+
+    // Check arg ordering (required args cannot follow optional)
+    check_arg_ordering(args, command_name, context);
+
+    // Check for prefix conflicts in var_names
+    let conflicts = check_prefix_conflicts(&arg_var_names);
+    for (prefix, longer) in conflicts {
+        context.add_error(ValidationError::CrossReferenceViolation {
+            path: format!("commands.{}.args", command_name),
+            reason: format!("argument var_name '{}' is a prefix of '{}'", prefix, longer),
+        });
+    }
+}
+
+/// Validate arg name format: [a-z0-9-]+ (no leading/trailing hyphens)
+fn validate_arg_name_format(name: &str) -> Result<(), String> {
+    if name.is_empty() {
+        return Err("argument name cannot be empty".to_string());
+    }
+
+    if name.starts_with('-') || name.ends_with('-') {
+        return Err("argument name cannot start or end with hyphen".to_string());
+    }
+
+    for ch in name.chars() {
+        if !ch.is_ascii_alphanumeric() && ch != '-' {
+            return Err(format!(
+                "argument name contains invalid character '{}': only alphanumeric and hyphen allowed",
+                ch
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+/// Check that required arguments don't follow optional ones.
+fn check_arg_ordering(
+    args: &[saran_types::PositionalArg],
+    command_name: &str,
+    context: &mut ValidationContext,
+) {
+    let mut seen_optional = false;
+
+    for (index, arg) in args.iter().enumerate() {
+        if arg.required {
+            if seen_optional {
+                context.add_error(ValidationError::CrossReferenceViolation {
+                    path: format!("commands.{}.args[{}]", command_name, index),
+                    reason: "required argument cannot follow optional argument".to_string(),
+                });
+            }
+        } else {
+            seen_optional = true;
+        }
+    }
+}
+
+// ============================================================================
 // Top-Level Validation
 // ============================================================================
 
@@ -703,14 +1178,25 @@ pub fn validate_wrapper(
         }
     };
 
-    // Run validation
-    let errors = validate_top_level(&wrapper);
+    let mut context = ValidationContext::new();
 
-    if errors.is_empty() {
-        Ok(wrapper)
-    } else {
-        Err(errors)
-    }
+    // Phase 2A validators: top-level structure
+    context.errors.extend(validate_top_level(&wrapper));
+
+    // Phase 2B validators in dependency order
+    // 2B.1: Variable declarations
+    validate_vars(&wrapper.vars, &mut context);
+
+    // 2B.2: Commands and actions
+    validate_commands(&wrapper.commands, &mut context);
+
+    // 2B.3: Optional flags
+    validate_optional_flags_all(&wrapper.commands, &mut context);
+
+    // 2B.4: Positional arguments
+    validate_args_all(&wrapper.commands, &mut context);
+
+    context.collect_errors().map(|_| wrapper)
 }
 
 #[cfg(test)]

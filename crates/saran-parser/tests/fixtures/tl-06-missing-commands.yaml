@@ -1,5 +1,0 @@
-# TL-06: Missing required 'commands' section
-# Expected: ValidationError::MissingField with field="commands"
-
-name: "test-wrapper"
-version: "1.0.0"

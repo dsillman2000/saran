@@ -1,0 +1,69 @@
+# CA-01: Invalid command name format (contains space)
+CA-01:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    "bad name":
+      actions:
+        - executable: echo
+          args: []
+
+# CA-02: Missing `actions` in command
+CA-02:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test: {}
+
+# CA-03: Empty `actions` list
+CA-03:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test:
+      actions: []
+
+# CA-04: Action with no executable key (and implicit missing args)
+CA-04:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - {}
+
+# CA-05: Action with extra keys (only executable and optional_flags allowed)
+CA-05:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: echo
+          args: []
+          extra_key: "not allowed"
+
+# CA-06: Invalid executable name (absolute path)
+CA-06:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: /bin/ls
+          args: []
+
+# CA-07: Valid command structure
+CA-07:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      help: "List items"
+      actions:
+        - executable: echo
+          args: ["item1", "item2"]
+    show:
+      actions:
+        - executable: cat
+          args: []

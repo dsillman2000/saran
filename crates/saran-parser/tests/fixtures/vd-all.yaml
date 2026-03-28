@@ -1,0 +1,96 @@
+# VD-01: Invalid variable name format (starts with digit)
+VD-01:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: echo
+          args: []
+  vars:
+    - name: "123VAR"
+      required: true
+
+# VD-02: Invalid variable name format (contains hyphen)
+VD-02:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: echo
+          args: []
+  vars:
+    - name: "VAR-NAME"
+      required: true
+
+# VD-03: Duplicate variable names
+VD-03:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: echo
+          args: []
+  vars:
+    - name: "MY_VAR"
+      required: true
+    - name: "MY_VAR"
+      default: "value"
+
+# VD-04: Required and default both set (mutually exclusive)
+VD-04:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: echo
+          args: []
+  vars:
+    - name: "MY_VAR"
+      required: true
+      default: "value"
+
+# VD-05: Neither required nor default (ambiguous optionality)
+VD-05:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: echo
+          args: []
+  vars:
+    - name: "MY_VAR"
+
+# VD-06: Prefix name conflict (VAR and VAR_SUFFIX)
+VD-06:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: echo
+          args: []
+  vars:
+    - name: "VAR"
+      required: true
+    - name: "VAR_SUFFIX"
+      required: true
+
+# VD-07: Valid variable declarations
+VD-07:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    test:
+      actions:
+        - executable: echo
+          args: []
+  vars:
+    - name: "MY_VAR"
+      required: true
+    - name: "OPTIONAL_VAR"
+      default: "default_value"

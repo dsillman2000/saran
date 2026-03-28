@@ -1,0 +1,165 @@
+# OF-01: Missing flag `name`
+OF-01:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - type: "str"
+
+# OF-02: Missing flag `type`
+OF-02:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - name: "--json"
+
+# OF-03: Invalid flag type
+OF-03:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - name: "--json"
+              flag_type: "float"
+
+# OF-04: Flag name doesn't start with `--`
+OF-04:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - name: "-json"
+              flag_type: "str"
+
+# OF-05: Invalid characters in flag name
+OF-05:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - name: "--bad_name"
+              flag_type: "str"
+
+# OF-06: Enum type without `values`
+OF-06:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - name: "--format"
+              flag_type: "enum"
+
+# OF-07: Empty `values` list for enum
+OF-07:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - name: "--format"
+              flag_type: "enum"
+              values: []
+
+# OF-08: Invalid enum value format
+OF-08:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - name: "--format"
+              flag_type: "enum"
+              values: ["bad value"]
+
+# OF-09: Bool flag with `repeated: true`
+OF-09:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - name: "--verbose"
+              flag_type: "bool"
+              repeated: true
+
+# OF-10: Duplicate flag names
+OF-10:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - name: "--json"
+              flag_type: "str"
+            - name: "--json"
+              flag_type: "bool"
+
+# OF-11: `passes_as` contains `=`
+OF-11:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - name: "--repo"
+              flag_type: "str"
+              passes_as: "--repo=value"
+
+# OF-12: Valid optional flags
+OF-12:
+  name: test-wrapper
+  version: "1.0.0"
+  commands:
+    list:
+      actions:
+        - executable: gh
+          args: []
+          optional_flags:
+            - name: "--json"
+              flag_type: "str"
+              help: "Output format"
+            - name: "--verbose"
+              flag_type: "bool"
+            - name: "--format"
+              flag_type: "enum"
+              values: ["json", "yaml", "csv"]

@@ -1,9 +1,0 @@
-# TL-03: Missing required 'version' field
-# Expected: ValidationError::MissingField with field="version"
-
-name: "test-wrapper"
-commands:
-  test:
-    actions:
-      - executable: "echo"
-        args: []

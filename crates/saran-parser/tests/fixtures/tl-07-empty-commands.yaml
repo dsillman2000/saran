@@ -1,6 +1,0 @@
-# TL-07: Empty 'commands' section (empty map)
-# Expected: ValidationError::MissingField with field="commands"
-
-name: "test-wrapper"
-version: "1.0.0"
-commands: {}
