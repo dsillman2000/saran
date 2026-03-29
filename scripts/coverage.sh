@@ -1,64 +1,18 @@
 #!/bin/bash
 # Coverage script for Saran project
-# Usage: ./scripts/coverage.sh [crate]
-#   - With no args: runs coverage for all crates
-#   - With crate name: runs coverage for that specific crate
+# Usage: ./scripts/coverage.sh
+# Runs coverage for all crates and displays a summary table
 
 set -e
 
-# Function to run coverage for a single crate
-run_coverage_for_crate() {
-    local CRATE="$1"
-
-    echo "Running coverage for: $CRATE"
-    echo "========================================"
-
-    # Check if cargo-llvm-cov is installed (only once, on first run)
-    if [ "$FIRST_RUN" = "true" ]; then
-        if ! command -v cargo-llvm-cov &> /dev/null; then
-            echo "Error: cargo-llvm-cov not found."
-            echo "Install with: cargo install cargo-llvm-cov"
-            exit 1
-        fi
-        FIRST_RUN="false"
-    fi
-
-    cd crates/$CRATE
-
-    # Check if this is a types-only crate (no implementation to cover)
-    if [ "$CRATE" = "saran-types" ] || [ "$CRATE" = "saran-test" ]; then
-        echo "Note: $CRATE is a utility/types-only crate with minimal implementation logic."
-        echo "Coverage will be low by design. Running tests instead..."
-        cargo test
-        echo "Tests passed!"
-        echo "========================================"
-        echo "Skipping coverage for $CRATE."
-        cd - > /dev/null
-        return
-    fi
-
-    # Run coverage with HTML output
-    cargo llvm-cov --html --output-dir ../coverage/$CRATE
-
-    echo "========================================"
-    echo "Coverage report generated at: coverage/$CRATE/index.html"
-    echo ""
-    cd - > /dev/null
-}
-
-FIRST_RUN="true"
-
-# If a specific crate is provided, run coverage for that crate only
-if [ -n "$1" ]; then
-    CRATE="$1"
-    run_coverage_for_crate "$CRATE"
-    echo ""
-    echo "To view:"
-    echo "  open coverage/$CRATE/index.html"
-    exit 0
+# Check if cargo-llvm-cov is installed
+if ! command -v cargo-llvm-cov &> /dev/null; then
+    echo "Error: cargo-llvm-cov not found."
+    echo "Install with: cargo install cargo-llvm-cov"
+    exit 1
 fi
 
-# Otherwise, discover and run coverage for all crates
+# Discover all crates in crates/ directory
 echo "Discovering all crates in crates/ directory..."
 CRATES=$(find crates -maxdepth 1 -mindepth 1 -type d ! -name "coverage" -exec basename {} \; | sort)
 
@@ -73,9 +27,71 @@ echo ""
 
 # Run coverage for each crate
 for CRATE in $CRATES; do
-    run_coverage_for_crate "$CRATE"
+    echo "Running coverage for: $CRATE"
+    echo "========================================"
+
+    cd crates/$CRATE
+
+    # Check if this is a types-only crate (no implementation to cover)
+    if [ "$CRATE" = "saran-types" ] || [ "$CRATE" = "saran-test" ]; then
+        echo "Note: $CRATE is a utility/types-only crate with minimal implementation logic."
+        echo "Coverage will be low by design. Running tests instead..."
+        cargo test
+        echo "Tests passed!"
+        cd - > /dev/null
+        echo ""
+        continue
+    fi
+
+    # Run coverage with summary-only output
+    cargo llvm-cov --summary-only -q
+
+    cd - > /dev/null
     echo ""
 done
 
+# Run coverage once at workspace level and extract JSON for final summary
 echo "========================================"
-echo "Coverage complete for all crates!"
+echo "COVERAGE SUMMARY FOR ALL CRATES"
+echo "========================================"
+
+JSON_OUTPUT=$(cargo llvm-cov --summary-only -q --json 2>/dev/null | tail -1)
+
+if [ -z "$JSON_OUTPUT" ]; then
+    echo "No coverage data available"
+    exit 1
+fi
+
+# Parse JSON to get totals
+TOTALS=$(echo "$JSON_OUTPUT" | jq -r '
+    .data[0].totals.regions.percent | floor | tostring
+')
+TOTAL_LINES=$(echo "$JSON_OUTPUT" | jq -r '
+    .data[0].totals.lines.percent | floor | tostring
+')
+TOTAL_FUNCS=$(echo "$JSON_OUTPUT" | jq -r '
+    .data[0].totals.functions.percent | floor | tostring
+')
+
+# Display header
+echo "Timestamp: $(echo "$JSON_OUTPUT" | jq -r '.cargo_llvm_cov.manifest_path') coverage report"
+echo ""
+echo "TOTALS:"
+printf "  %-12s %s%%\n" "Regions:" "$TOTALS"
+printf "  %-12s %s%%\n" "Lines:" "$TOTAL_LINES"
+printf "  %-12s %s%%\n" "Functions:" "$TOTAL_FUNCS"
+echo ""
+echo "FILES:"
+printf "  %-48s %8s %8s %8s\n" "File" "Regions" "Lines" "Functions"
+
+# Display each file with aligned columns using printf
+echo "$JSON_OUTPUT" | jq -r '.data[0].files[] |
+    .filename as $full |
+    ($full | split("/home/dsillman2000/rust-projects/saran/")[-1]) as $short |
+    (.summary.regions.percent | floor | tostring) as $r |
+    (.summary.lines.percent | floor | tostring) as $l |
+    (.summary.functions.percent | floor | tostring) as $f |
+    "  " + $short + "|" + $r + "%|" + $l + "%|" + $f + "%"
+' | while IFS='|' read -r file regions lines functions; do
+    printf "  %-48s %7s %7s %8s\n" "$file" "$regions" "$lines" "$functions"
+done

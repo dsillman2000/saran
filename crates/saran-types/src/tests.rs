@@ -107,4 +107,210 @@ mod tests {
         assert_eq!(arg.arg_type, "str");
         assert_eq!(arg.required, true);
     }
+
+    // ============================================================================
+    // Action Deserialization Error Cases
+    // ============================================================================
+
+    #[test]
+    fn test_action_deserialize_multiple_executable_keys() {
+        let yaml = r#"
+gh: [pr, list]
+redis: [get, key]
+"#;
+        let result: Result<Action, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("exactly one executable key"),
+            "Expected error about multiple keys, got: {}",
+            err_msg
+        );
+    }
+
+    #[test]
+    fn test_action_deserialize_no_executable_key() {
+        let yaml = r#"
+optional_flags: []
+"#;
+        let result: Result<Action, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("executable key"),
+            "Expected error about missing executable key, got: {}",
+            err_msg
+        );
+    }
+
+    #[test]
+    fn test_action_deserialize_non_array_executable_value() {
+        let yaml = r#"
+gh: "not an array"
+"#;
+        let result: Result<Action, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        // serde_yaml returns "invalid type: string" error when trying to deserialize as sequence
+        assert!(
+            err_msg.contains("invalid type") && err_msg.contains("sequence"),
+            "Expected type mismatch error, got: {}",
+            err_msg
+        );
+    }
+
+    #[test]
+    fn test_action_deserialize_object_executable_value() {
+        let yaml = r#"
+gh:
+  nested: true
+"#;
+        let result: Result<Action, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        // serde_yaml returns "invalid type: map" error when trying to deserialize as sequence
+        assert!(
+            err_msg.contains("invalid type") && err_msg.contains("sequence"),
+            "Expected type mismatch error, got: {}",
+            err_msg
+        );
+    }
+
+    #[test]
+    fn test_action_deserialize_with_optional_flags() {
+        let yaml = r#"
+gh: [pr, list]
+optional_flags:
+  - name: --draft
+    flag_type: bool
+"#;
+        let result: Result<Action, _> = serde_yaml::from_str(yaml);
+        if let Err(e) = &result {
+            eprintln!("Error: {}", e);
+        }
+        assert!(
+            result.is_ok(),
+            "Failed to deserialize Action with optional_flags"
+        );
+        let action = result.unwrap();
+        assert_eq!(action.executable, "gh");
+        assert_eq!(action.args, vec!["pr", "list"]);
+        assert_eq!(action.optional_flags.len(), 1);
+        assert_eq!(action.optional_flags[0].name, "--draft");
+        assert_eq!(action.optional_flags[0].flag_type, "bool");
+    }
+
+    #[test]
+    fn test_action_deserialize_invalid_optional_flags_not_list() {
+        let yaml = r#"
+gh: [pr, list]
+optional_flags: "not a list"
+"#;
+        let result: Result<Action, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_err());
+        // The error will come from optional_flags deserialization
+    }
+
+    // ============================================================================
+    // Empty Collections in WrapperDefinition
+    // ============================================================================
+
+    #[test]
+    fn test_wrapper_definition_empty_collections() {
+        let wrapper = WrapperDefinition {
+            name: "empty-wrapper".to_string(),
+            version: "1.0.0".to_string(),
+            help: None,
+            requires: vec![],
+            vars: vec![],
+            quotas: vec![],
+            commands: BTreeMap::new(),
+        };
+
+        assert!(wrapper.requires.is_empty());
+        assert!(wrapper.vars.is_empty());
+        assert!(wrapper.quotas.is_empty());
+        assert!(wrapper.commands.is_empty());
+    }
+
+    #[test]
+    fn test_wrapper_definition_empty_collections_roundtrip() {
+        let wrapper = WrapperDefinition {
+            name: "empty-wrapper".to_string(),
+            version: "1.0.0".to_string(),
+            help: None,
+            requires: vec![],
+            vars: vec![],
+            quotas: vec![],
+            commands: BTreeMap::new(),
+        };
+
+        let serialized = serde_yaml::to_string(&wrapper).unwrap();
+        let deserialized: WrapperDefinition = serde_yaml::from_str(&serialized).unwrap();
+        assert_eq!(wrapper, deserialized);
+    }
+
+    #[test]
+    fn test_wrapper_definition_omitted_collections() {
+        // YAML with no requires, vars, or quotas sections
+        let yaml = r#"
+name: minimal-wrapper
+version: 1.0.0
+commands:
+  test:
+    help: A test command
+    actions:
+      - echo: ["hello"]
+"#;
+        let result: Result<WrapperDefinition, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        let wrapper = result.unwrap();
+        assert!(wrapper.requires.is_empty());
+        assert!(wrapper.vars.is_empty());
+        assert!(wrapper.quotas.is_empty());
+    }
+
+    #[test]
+    fn test_wrapper_definition_with_all_fields_but_empty_collections() {
+        let wrapper = WrapperDefinition {
+            name: "full-empty-wrapper".to_string(),
+            version: "1.0.0".to_string(),
+            help: Some("A wrapper with all fields but empty collections".to_string()),
+            requires: vec![],
+            vars: vec![],
+            quotas: vec![],
+            commands: BTreeMap::new(),
+        };
+
+        let serialized = serde_yaml::to_string(&wrapper).unwrap();
+        let deserialized: WrapperDefinition = serde_yaml::from_str(&serialized).unwrap();
+        assert_eq!(wrapper, deserialized);
+        assert_eq!(
+            deserialized.help,
+            Some("A wrapper with all fields but empty collections".to_string())
+        );
+    }
+
+    #[test]
+    fn test_wrapper_definition_empty_commands_non_empty_vars() {
+        let wrapper = WrapperDefinition {
+            name: "vars-only".to_string(),
+            version: "1.0.0".to_string(),
+            help: None,
+            requires: vec![],
+            vars: vec![VarDecl {
+                name: "TEST_VAR".to_string(),
+                required: true,
+                default: None,
+                help: None,
+            }],
+            quotas: vec![],
+            commands: BTreeMap::new(),
+        };
+
+        assert_eq!(wrapper.vars.len(), 1);
+        assert!(wrapper.commands.is_empty());
+        assert!(wrapper.requires.is_empty());
+        assert!(wrapper.quotas.is_empty());
+    }
 }

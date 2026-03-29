@@ -969,3 +969,158 @@ saran_test!("MA-03", ma_03_each_action_gets_own_argv, {
     assert_eq!(argv1, vec!["tool", "run", "--format", "json"]);
     assert_eq!(argv2, vec!["tool", "run", "--format", "yaml"]);
 });
+
+// ============================================================================
+// Constructor Tests for new() methods (CTR-01 to CTR-04)
+// ============================================================================
+
+saran_test!("CTR-01", ctr_01_saran_env_var_new, {
+    // Test SaranEnvVar::new() constructor
+    let var = SaranEnvVar::new("test-value".to_string(), SaranEnvScope::PerWrapper);
+    assert_eq!(var.value, "test-value");
+    assert_eq!(var.scope, SaranEnvScope::PerWrapper);
+});
+
+saran_test!("CTR-02", ctr_02_resolution_context_new, {
+    // Test ResolutionContext::new() constructor
+    let mut resolved_vars = HashMap::new();
+    resolved_vars.insert("VAR1".to_string(), "value1".to_string());
+
+    let mut caller_args = HashMap::new();
+    caller_args.insert("ARG1".to_string(), "arg_value".to_string());
+
+    let context = ResolutionContext::new(resolved_vars.clone(), caller_args.clone());
+
+    assert_eq!(context.resolved_vars, resolved_vars);
+    assert_eq!(context.caller_args, caller_args);
+});
+
+saran_test!("CTR-03", ctr_03_assembly_context_new, {
+    // Test AssemblyContext::new() constructor
+    let mut resolved_vars = HashMap::new();
+    resolved_vars.insert("VAR1".to_string(), "value1".to_string());
+
+    let mut caller_args = HashMap::new();
+    caller_args.insert("ARG1".to_string(), "arg_value".to_string());
+
+    let mut optional_flags = HashMap::new();
+    optional_flags.insert(
+        "--flag".to_string(),
+        OptionalFlagValue::String("flag_val".to_string()),
+    );
+
+    let context = AssemblyContext::new(
+        resolved_vars.clone(),
+        caller_args.clone(),
+        optional_flags.clone(),
+    );
+
+    assert_eq!(context.resolved_vars, resolved_vars);
+    assert_eq!(context.caller_args, caller_args);
+    assert_eq!(context.optional_flags, optional_flags);
+});
+
+saran_test!("CTR-04", ctr_04_saran_env_scope_display, {
+    // Test that SaranEnvScope can be displayed/formatted
+    assert_eq!(format!("{}", SaranEnvScope::PerWrapper), "per-wrapper");
+    assert_eq!(format!("{}", SaranEnvScope::Global), "global");
+    assert_eq!(format!("{}", SaranEnvScope::Host), "host");
+    assert_eq!(format!("{}", SaranEnvScope::Default), "default");
+});
+
+// ============================================================================
+// Error Display/Message Tests (ERR-01 to ERR-04)
+// ============================================================================
+
+saran_test!("ERR-01", err_01_substitution_error_display, {
+    // Test SubstitutionError display message
+    let err = SubstitutionError::UndeclaredVariable("MISSING_VAR".to_string());
+    let msg = format!("{}", err);
+    assert!(
+        msg.contains("MISSING_VAR"),
+        "Error message should contain variable name"
+    );
+    assert!(
+        msg.contains("Undeclared variable") || msg.contains("variable"),
+        "Error message should mention undeclared/variable"
+    );
+});
+
+saran_test!("ERR-02", err_02_substitution_error_debug, {
+    // Test SubstitutionError debug representation
+    let err = SubstitutionError::UndeclaredVariable("TEST_VAR".to_string());
+    let debug_str = format!("{:?}", err);
+    assert!(
+        debug_str.contains("UndeclaredVariable"),
+        "Debug output should show variant name"
+    );
+    assert!(
+        debug_str.contains("TEST_VAR"),
+        "Debug output should show variable name"
+    );
+});
+
+saran_test!("ERR-03", err_03_argv_assembly_error_display, {
+    // Test ArgvAssemblyError display message
+    let err = ArgvAssemblyError::UnresolvedVariable("MISSING_VAR".to_string());
+    let msg = format!("{}", err);
+    assert!(
+        msg.contains("MISSING_VAR"),
+        "Error message should contain variable name"
+    );
+    assert!(
+        msg.contains("Cannot resolve") || msg.contains("variable"),
+        "Error message should mention resolution"
+    );
+});
+
+saran_test!("ERR-04", err_04_argv_assembly_error_debug, {
+    // Test ArgvAssemblyError debug representation
+    let err = ArgvAssemblyError::UnresolvedVariable("TEST_VAR".to_string());
+    let debug_str = format!("{:?}", err);
+    assert!(
+        debug_str.contains("UnresolvedVariable"),
+        "Debug output should show variant name"
+    );
+    assert!(
+        debug_str.contains("TEST_VAR"),
+        "Debug output should show variable name"
+    );
+});
+
+saran_test!("ERR-05", err_05_substitution_to_argv_error_conversion, {
+    // Test From<SubstitutionError> for ArgvAssemblyError conversion
+    let sub_err = SubstitutionError::UndeclaredVariable("VAR_NAME".to_string());
+    let argv_err: ArgvAssemblyError = sub_err.into();
+
+    // Verify the error is converted properly by checking display message
+    let msg = format!("{}", argv_err);
+    assert!(
+        msg.contains("VAR_NAME"),
+        "Converted error message should contain variable name"
+    );
+    assert!(
+        msg.contains("Cannot resolve") || msg.contains("variable"),
+        "Error message should mention resolution"
+    );
+});
+
+saran_test!("ERR-06", err_06_error_equality, {
+    // Test that error types support equality comparison (PartialEq)
+    let err1 = SubstitutionError::UndeclaredVariable("VAR1".to_string());
+    let err2 = SubstitutionError::UndeclaredVariable("VAR1".to_string());
+    let err3 = SubstitutionError::UndeclaredVariable("VAR2".to_string());
+
+    assert_eq!(err1, err2, "Same errors should be equal");
+    assert_ne!(err1, err3, "Different variable names should not be equal");
+
+    let argv_err1 = ArgvAssemblyError::UnresolvedVariable("VAR1".to_string());
+    let argv_err2 = ArgvAssemblyError::UnresolvedVariable("VAR1".to_string());
+    let argv_err3 = ArgvAssemblyError::UnresolvedVariable("VAR2".to_string());
+
+    assert_eq!(argv_err1, argv_err2, "Same errors should be equal");
+    assert_ne!(
+        argv_err1, argv_err3,
+        "Different variable names should not be equal"
+    );
+});
