@@ -7,6 +7,7 @@ members = [
     "crates/saran-parser",
     "crates/saran-types",
     "crates/saran-test",
+    "crates/saran-state",
 ]
 resolver = "2"
 
@@ -32,6 +33,7 @@ saran-parser = { path = "crates/saran-parser", version = "0.1.0" }
 saran-validation = { path = "crates/saran-validation", version = "0.1.0" }
 saran-codegen = { path = "crates/saran-codegen", version = "0.1.0" }
 saran-test = { path = "crates/saran-test", version = "0.1.0" }
+saran-state = { path = "crates/saran-state", version = "0.1.0" }
 
 [profile.release]
 opt-level = 3

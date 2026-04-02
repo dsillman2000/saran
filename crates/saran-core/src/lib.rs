@@ -4,8 +4,9 @@
 //! - Variable resolution from `env.yaml` with priority chain
 //! - `$VAR_NAME` token substitution in strings
 //! - Argument assembly for child process execution
-
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
 use thiserror::Error;
 
 pub use saran_parser::{parse_tokens, ParsedTemplate, Token};
@@ -58,7 +59,7 @@ impl SaranEnvVar {
 pub type SaranEnv = HashMap<String, SaranEnvVar>;
 
 /// The structure of `env.yaml` as loaded from disk.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SaranEnvYaml {
     /// Global variables: affect all wrappers
     pub global: HashMap<String, String>,

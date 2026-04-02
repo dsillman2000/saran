@@ -179,3 +179,42 @@ glab-mr-note.mr.rw.quota:
 - If `remaining` is 0, the command is rejected with an error and the wrapper exits with code 68 (exceeds quota)
 - `saran quotas reset <wrapper>` sets all `remaining` values back to their `limit` values
 - Quota state persists across wrapper invocations until manually reset by the operator
+
+---
+
+## State Management Implementation
+
+The `env.yaml` and `quotas.yaml` file operations are implemented in the `saran-state` crate (`crates/saran-state/`). This crate provides a programmatic API for:
+
+- Reading and writing environment variables to `env.yaml`
+- Reading and modifying quota state in `quotas.yaml`
+- Data directory discovery and management
+
+> **Note:** Generated wrapper binaries link against `saran-state` to check quotas at runtime before executing commands. The main `saran` CLI uses `saran-state` for `saran env` and `saran quotas` management commands.
+
+### Integration Points
+
+| Operation           | Who Calls                          | When                                 |
+| ------------------- | ---------------------------------- | ------------------------------------ |
+| `env.yaml` read     | `saran-core` (via `SaranEnvYaml`)  | Wrapper startup                      |
+| `env.yaml` write    | `saran` CLI (`saran env set`)      | User command                         |
+| `quotas.yaml` read  | Generated wrappers                 | Before command execution             |
+| `quotas.yaml` write | Generated wrappers                 | After successful command (decrement) |
+| `quotas.yaml` reset | `saran` CLI (`saran quotas reset`) | User command                         |
+
+### Quota Initialization on Install
+
+When a wrapper is installed via `saran install`:
+
+1. The wrapper's `quotas:` declaration is read from the YAML
+2. For each quota entry, the `limit` value is determined:
+   - If `limit:` is a literal number, use that value
+   - If `limit:` references a variable (e.g., `$QUOTA_LIMIT`), resolve it from `env.yaml` or host environment
+3. An entry is created in `quotas.yaml` with `remaining: <limit>` and `limit: <limit>`
+4. If the wrapper already exists in `quotas.yaml`, it is replaced with fresh limits
+
+### Concurrency Assumption
+
+**Wrappers are not expected to run concurrently on the same host.** The `saran-state` crate does not implement file locking for `quotas.yaml`. If concurrent execution occurs, quota state may become inconsistent (race condition on read-modify-write).
+
+> **Specification rationale:** The primary use case (LLM agents calling wrappers sequentially) does not require concurrent execution. Adding file locking would add complexity and latency to every quota check.

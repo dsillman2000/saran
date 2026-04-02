@@ -29,9 +29,10 @@ This document maps all Saran specifications and their relationships. Use this to
 | **[spec/tests/unit/03-variable-resolution.md](./tests/unit/03-variable-resolution.md)**         | 14         | Env.yaml priority chain resolution     | ✅ Complete        |
 | **[spec/tests/unit/04-substitution-resolution.md](./tests/unit/04-substitution-resolution.md)** | 10         | Variable substitution in strings       | ✅ Complete        |
 | **[spec/tests/unit/05-argument-assembly.md](./tests/unit/05-argument-assembly.md)**             | 19         | Child process argv construction        | ✅ Complete        |
+| **[spec/tests/unit/06-state-management.md](./tests/unit/06-state-management.md)**               | 24         | env.yaml & quotas.yaml file I/O        | ✅ Spec Complete   |
 | **Code Generation**                                                                             | TBD        | Generated Rust code correctness        | 📋 To be specified |
 
-**Total Unit Tests: 108 (+ code generation tests)**
+**Total Unit Tests: 132 (+ code generation tests)**
 
 ### Integration Tests (Slower, With Dependencies)
 
@@ -112,6 +113,7 @@ flowchart TD
 | **Resolve variables**      | saran-env.md     | 03-variable-resolution (14)     | Priority chain             |
 | **Substitute tokens**      | saran-format.md  | 04-substitution-resolution (10) | Context-specific rules     |
 | **Assemble argv**          | saran-format.md  | 05-argument-assembly (19)       | Flag appending, order      |
+| **State management**       | saran-env.md     | 06-state-management (24)        | env.yaml & quotas.yaml I/O |
 | **Generate Rust code**     | saran-codegen.md | Code Generation (TBD)           | Clap integration, validity |
 
 ### Real Behavior (Integration Tests)
@@ -213,6 +215,8 @@ graph TD
     H["03-variable-resolution.md<br/>tests"]
     I["saran-codegen.md<br/>how vars are resolved at runtime"]
 
+    GA["saran-state crate<br/>state management"]
+
     J["saran-cli.md<br/>reference"]
     K["Integration tests<br/>TBD"]
 
@@ -227,6 +231,7 @@ graph TD
 
     G --> H
     G --> I
+    G --> GA
 
     J --> K
 
@@ -243,9 +248,10 @@ graph TD
 - CLI commands (saran-cli.md)
 - Variable resolution (saran-env.md)
 - Naming conventions (saran-conventions.md)
-- Unit test specifications (01-05)
+- Unit test specifications (01-06) — 132 tests
 - Code generation design (saran-codegen.md)
 - Integration test scenarios (ro.yaml)
+- State management crate (saran-state) — spec complete
 
 📋 **To Specify**
 
@@ -305,6 +311,7 @@ graph TD
     N["03-variable-resolution.md"]
     O["04-substitution-resolution.md"]
     P["05-argument-assembly.md"]
+    PA["06-state-management.md"]
 
     Q["integration/"]
     R["README.md"]
@@ -341,6 +348,7 @@ graph TD
     H --> N
     H --> O
     H --> P
+    H --> PA
 
     Q --> R
     Q --> S
@@ -358,10 +366,15 @@ graph TD
 
 ## Next Steps
 
-1. **Review saran-codegen.md** ← You are here
+1. **Implement saran-state crate** ← Next priority
+
+   - Phase 2: Crate setup (Cargo.toml, lib.rs)
+   - Phase 3: env.yaml operations (14 tests)
+   - Phase 4: quotas.yaml operations (10 tests)
+   - See: `crates/saran-state/to-do.md`
+
 2. **Add code generation test spec** (details of what unit tests should verify)
 3. **Add error handling taxonomy** (error codes and messages)
-4. **Add CLI lifecycle spec** (step-by-step for install/list/remove/env)
-5. **Begin Phase 1 implementation** (unit tests for parsing & validation)
+4. **Add CLI lifecycle spec** (step-by-step flow for install/list/remove/env)
 
 Questions? Check the individual specification documents or the IMPLEMENTATION.md file.
