@@ -6,10 +6,8 @@ rust-version.workspace = true
 
 [dependencies]
 serde_yaml.workspace = true
-serde.workspace = true
 saran-types.workspace = true
 regex.workspace = true
-anyhow.workspace = true
 thiserror.workspace = true
 semver.workspace = true
 

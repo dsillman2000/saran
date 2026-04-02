@@ -11,10 +11,6 @@ use thiserror::Error;
 
 pub use saran_parser::{parse_tokens, ParsedTemplate, Token};
 
-// ============================================================================
-// Phase 1: Variable Resolution Types
-// ============================================================================
-
 /// The source of a resolved variable value in the priority chain.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SaranEnvScope {
@@ -255,10 +251,6 @@ pub fn resolve_vars(
     }
 }
 
-// ============================================================================
-// Phase 2: Substitution Resolution Types
-// ============================================================================
-
 /// Context for resolving variable references during substitution.
 ///
 /// Contains both startup-resolved variables and invocation-time caller arguments,
@@ -469,10 +461,6 @@ pub fn resolve_help_text(
 
     result
 }
-
-// ============================================================================
-// Phase 3: Argument Assembly Types
-// ============================================================================
 
 /// Representation of a single optional flag value provided by the caller.
 ///

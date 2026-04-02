@@ -972,10 +972,6 @@ saran_test!("MA-03", ma_03_each_action_gets_own_argv, {
     assert_eq!(argv2, vec!["tool", "run", "--format", "yaml"]);
 });
 
-// ============================================================================
-// Constructor Tests for new() methods (CTR-01 to CTR-04)
-// ============================================================================
-
 #[test]
 fn construct_new_saran_env_var() {
     // Test SaranEnvVar::new() constructor
