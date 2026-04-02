@@ -329,7 +329,8 @@ wrappers:
 // Additional Tests: Multiple Missing Required Variables
 // ============================================================================
 
-saran_test!("MULTI", multiple_missing_required_variables, {
+#[test]
+fn multiple_missing_required_variables() {
     // Multiple required variables with no values should all be listed
     let var_decls = vec![
         var_decl("TOKEN_A", true, None),
@@ -346,13 +347,14 @@ saran_test!("MULTI", multiple_missing_required_variables, {
     let mut missing = result.missing_required.clone();
     missing.sort();
     assert_eq!(missing, vec!["TOKEN_A", "TOKEN_B", "TOKEN_C"]);
-});
+}
 
 // ============================================================================
 // Additional Tests: Mixed Required and Optional
 // ============================================================================
 
-saran_test!("MIXED", mixed_required_and_optional_variables, {
+#[test]
+fn mixed_required_and_optional_variables() {
     // Some required with values, some without; some optional with values, some without
     let var_decls = vec![
         var_decl("REQUIRED_WITH_VALUE", true, None),
@@ -379,7 +381,7 @@ saran_test!("MIXED", mixed_required_and_optional_variables, {
     assert!(!result.resolved.contains_key("OPTIONAL_NO_VALUE"));
 
     assert_eq!(result.missing_required, vec!["REQUIRED_NO_VALUE"]);
-});
+}
 
 // ============================================================================
 // Phase 2: Substitution Resolution Tests
@@ -974,14 +976,16 @@ saran_test!("MA-03", ma_03_each_action_gets_own_argv, {
 // Constructor Tests for new() methods (CTR-01 to CTR-04)
 // ============================================================================
 
-saran_test!("CTR-01", ctr_01_saran_env_var_new, {
+#[test]
+fn construct_new_saran_env_var() {
     // Test SaranEnvVar::new() constructor
     let var = SaranEnvVar::new("test-value".to_string(), SaranEnvScope::PerWrapper);
     assert_eq!(var.value, "test-value");
     assert_eq!(var.scope, SaranEnvScope::PerWrapper);
-});
+}
 
-saran_test!("CTR-02", ctr_02_resolution_context_new, {
+#[test]
+fn construct_new_resolution_context() {
     // Test ResolutionContext::new() constructor
     let mut resolved_vars = HashMap::new();
     resolved_vars.insert("VAR1".to_string(), "value1".to_string());
@@ -993,9 +997,10 @@ saran_test!("CTR-02", ctr_02_resolution_context_new, {
 
     assert_eq!(context.resolved_vars, resolved_vars);
     assert_eq!(context.caller_args, caller_args);
-});
+}
 
-saran_test!("CTR-03", ctr_03_assembly_context_new, {
+#[test]
+fn construct_new_assembly_context() {
     // Test AssemblyContext::new() constructor
     let mut resolved_vars = HashMap::new();
     resolved_vars.insert("VAR1".to_string(), "value1".to_string());
@@ -1018,21 +1023,23 @@ saran_test!("CTR-03", ctr_03_assembly_context_new, {
     assert_eq!(context.resolved_vars, resolved_vars);
     assert_eq!(context.caller_args, caller_args);
     assert_eq!(context.optional_flags, optional_flags);
-});
+}
 
-saran_test!("CTR-04", ctr_04_saran_env_scope_display, {
+#[test]
+fn construct_saran_env_scope_display() {
     // Test that SaranEnvScope can be displayed/formatted
     assert_eq!(format!("{}", SaranEnvScope::PerWrapper), "per-wrapper");
     assert_eq!(format!("{}", SaranEnvScope::Global), "global");
     assert_eq!(format!("{}", SaranEnvScope::Host), "host");
     assert_eq!(format!("{}", SaranEnvScope::Default), "default");
-});
+}
 
 // ============================================================================
 // Error Display/Message Tests (ERR-01 to ERR-04)
 // ============================================================================
 
-saran_test!("ERR-01", err_01_substitution_error_display, {
+#[test]
+fn display_substitution_error() {
     // Test SubstitutionError display message
     let err = SubstitutionError::UndeclaredVariable("MISSING_VAR".to_string());
     let msg = format!("{}", err);
@@ -1044,9 +1051,10 @@ saran_test!("ERR-01", err_01_substitution_error_display, {
         msg.contains("Undeclared variable") || msg.contains("variable"),
         "Error message should mention undeclared/variable"
     );
-});
+}
 
-saran_test!("ERR-02", err_02_substitution_error_debug, {
+#[test]
+fn debug_substitution_error() {
     // Test SubstitutionError debug representation
     let err = SubstitutionError::UndeclaredVariable("TEST_VAR".to_string());
     let debug_str = format!("{:?}", err);
@@ -1058,9 +1066,10 @@ saran_test!("ERR-02", err_02_substitution_error_debug, {
         debug_str.contains("TEST_VAR"),
         "Debug output should show variable name"
     );
-});
+}
 
-saran_test!("ERR-03", err_03_argv_assembly_error_display, {
+#[test]
+fn display_argv_assembly_error() {
     // Test ArgvAssemblyError display message
     let err = ArgvAssemblyError::UnresolvedVariable("MISSING_VAR".to_string());
     let msg = format!("{}", err);
@@ -1072,9 +1081,10 @@ saran_test!("ERR-03", err_03_argv_assembly_error_display, {
         msg.contains("Cannot resolve") || msg.contains("variable"),
         "Error message should mention resolution"
     );
-});
+}
 
-saran_test!("ERR-04", err_04_argv_assembly_error_debug, {
+#[test]
+fn debug_argv_assembly_error() {
     // Test ArgvAssemblyError debug representation
     let err = ArgvAssemblyError::UnresolvedVariable("TEST_VAR".to_string());
     let debug_str = format!("{:?}", err);
@@ -1086,9 +1096,10 @@ saran_test!("ERR-04", err_04_argv_assembly_error_debug, {
         debug_str.contains("TEST_VAR"),
         "Debug output should show variable name"
     );
-});
+}
 
-saran_test!("ERR-05", err_05_substitution_to_argv_error_conversion, {
+#[test]
+fn conversion_substitution_to_argv_error() {
     // Test From<SubstitutionError> for ArgvAssemblyError conversion
     let sub_err = SubstitutionError::UndeclaredVariable("VAR_NAME".to_string());
     let argv_err: ArgvAssemblyError = sub_err.into();
@@ -1103,9 +1114,10 @@ saran_test!("ERR-05", err_05_substitution_to_argv_error_conversion, {
         msg.contains("Cannot resolve") || msg.contains("variable"),
         "Error message should mention resolution"
     );
-});
+}
 
-saran_test!("ERR-06", err_06_error_equality, {
+#[test]
+fn error_equality() {
     // Test that error types support equality comparison (PartialEq)
     let err1 = SubstitutionError::UndeclaredVariable("VAR1".to_string());
     let err2 = SubstitutionError::UndeclaredVariable("VAR1".to_string());
@@ -1123,4 +1135,4 @@ saran_test!("ERR-06", err_06_error_equality, {
         argv_err1, argv_err3,
         "Different variable names should not be equal"
     );
-});
+}

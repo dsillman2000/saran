@@ -4,7 +4,7 @@
 
 Unit tests for the state management system defined in `saran-env.md`. These tests validate the reading, writing, and modification of `env.yaml` and `quotas.yaml` files via the `saran-state` crate.
 
-**Total tests: 24**
+**Total tests: 28**
 
 > **Prerequisite:** Review [`saran-env.md`](../../saran-env.md) for the `env.yaml` and `quotas.yaml` formats, priority chains, and quota behavior.
 
@@ -106,6 +106,15 @@ Unit tests for the state management system defined in `saran-env.md`. These test
 | RS-01 | Reset single wrapper       | Reset quotas for one wrapper  | All remaining=limit for that wrapper |
 | RS-02 | Reset all wrappers         | Reset quotas for all wrappers | All remaining=limit for all wrappers |
 | RS-03 | Reset non-existent wrapper | Reset wrapper not in file     | No error, no changes                 |
+
+### Data Directory Resolution
+
+| ID    | Test Purpose                          | Test Case Description                                          | Expected Result                                                    |
+| ----- | ------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| SD-01 | Default path resolved from `$HOME`    | No `SARAN_DATA_DIR` set; `HOME` is set                         | `data_dir()` returns `$HOME/.local/share/saran`                    |
+| SD-02 | Relative `SARAN_DATA_DIR` is rejected | Set `SARAN_DATA_DIR` to a relative path (e.g. `relative/path`) | `SaranState::new()` returns `Err` containing "absolute"            |
+| SD-03 | Missing `HOME` with no override fails | Unset both `SARAN_DATA_DIR` and `HOME`                         | `SaranState::new()` returns `Err` containing "HOME"                |
+| SD-04 | `ensure_data_dir` creates missing dir | Point `SARAN_DATA_DIR` at a deeply-nested non-existent path    | After `ensure_data_dir()`, the full directory hierarchy is created |
 
 ---
 

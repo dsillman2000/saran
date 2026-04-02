@@ -29,10 +29,10 @@ This document maps all Saran specifications and their relationships. Use this to
 | **[spec/tests/unit/03-variable-resolution.md](./tests/unit/03-variable-resolution.md)**         | 14         | Env.yaml priority chain resolution     | ✅ Complete        |
 | **[spec/tests/unit/04-substitution-resolution.md](./tests/unit/04-substitution-resolution.md)** | 10         | Variable substitution in strings       | ✅ Complete        |
 | **[spec/tests/unit/05-argument-assembly.md](./tests/unit/05-argument-assembly.md)**             | 19         | Child process argv construction        | ✅ Complete        |
-| **[spec/tests/unit/06-state-management.md](./tests/unit/06-state-management.md)**               | 24         | env.yaml & quotas.yaml file I/O        | ✅ Spec Complete   |
+| **[spec/tests/unit/06-state-management.md](./tests/unit/06-state-management.md)**               | 28         | env.yaml & quotas.yaml file I/O        | ✅ Spec Complete   |
 | **Code Generation**                                                                             | TBD        | Generated Rust code correctness        | 📋 To be specified |
 
-**Total Unit Tests: 132 (+ code generation tests)**
+**Total Unit Tests: 136 (+ code generation tests)**
 
 ### Integration Tests (Slower, With Dependencies)
 
@@ -113,7 +113,7 @@ flowchart TD
 | **Resolve variables**      | saran-env.md     | 03-variable-resolution (14)     | Priority chain             |
 | **Substitute tokens**      | saran-format.md  | 04-substitution-resolution (10) | Context-specific rules     |
 | **Assemble argv**          | saran-format.md  | 05-argument-assembly (19)       | Flag appending, order      |
-| **State management**       | saran-env.md     | 06-state-management (24)        | env.yaml & quotas.yaml I/O |
+| **State management**       | saran-env.md     | 06-state-management (28)        | env.yaml & quotas.yaml I/O |
 | **Generate Rust code**     | saran-codegen.md | Code Generation (TBD)           | Clap integration, validity |
 
 ### Real Behavior (Integration Tests)
@@ -248,7 +248,7 @@ graph TD
 - CLI commands (saran-cli.md)
 - Variable resolution (saran-env.md)
 - Naming conventions (saran-conventions.md)
-- Unit test specifications (01-06) — 132 tests
+- Unit test specifications (01-06) — 136 tests
 - Code generation design (saran-codegen.md)
 - Integration test scenarios (ro.yaml)
 - State management crate (saran-state) — spec complete

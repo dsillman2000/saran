@@ -446,3 +446,59 @@ saran_test!("RS-03", rs_03_reset_nonexistent_wrapper, {
     state.reset_wrapper_quotas("nonexistent").unwrap();
     cleanup();
 });
+
+// ============================================================================
+// Data Directory Resolution (SD-01 to SD-04)
+// ============================================================================
+
+saran_test!("SD-01", sd_01_default_path_from_home, {
+    // Remove SARAN_DATA_DIR so resolve_data_dir falls through to HOME
+    env::remove_var("SARAN_DATA_DIR");
+    let home = env::var("HOME").expect("HOME must be set for this test");
+
+    let state = SaranState::new().expect("SaranState::new() failed");
+    let expected = PathBuf::from(&home).join(".local/share/saran");
+
+    // Verify data_dir() accessor and default path resolution
+    assert_eq!(state.data_dir(), expected.as_path());
+    cleanup();
+});
+
+saran_test!("SD-02", sd_02_relative_saran_data_dir_fails, {
+    env::set_var("SARAN_DATA_DIR", "relative/path");
+
+    let result = SaranState::new();
+    assert!(result.is_err());
+    assert!(result.unwrap_err().to_string().contains("absolute"));
+    cleanup();
+});
+
+saran_test!("SD-03", sd_03_home_not_set_fails, {
+    env::remove_var("SARAN_DATA_DIR");
+    let saved_home = env::var("HOME").ok();
+    env::remove_var("HOME");
+
+    let result = SaranState::new();
+
+    // Restore HOME before assertions so other tests are not broken
+    if let Some(h) = saved_home {
+        env::set_var("HOME", h);
+    }
+
+    assert!(result.is_err());
+    assert!(result.unwrap_err().to_string().contains("HOME"));
+    cleanup();
+});
+
+saran_test!("SD-04", sd_04_ensure_data_dir_creates_missing_dir, {
+    let temp = tempfile::tempdir().unwrap();
+    let nested = temp.path().join("deeply/nested/new-dir");
+    env::set_var("SARAN_DATA_DIR", &nested);
+
+    let state = SaranState::new().expect("SaranState::new() failed");
+    assert!(!nested.exists(), "directory should not exist yet");
+
+    state.ensure_data_dir().unwrap();
+    assert!(nested.exists(), "directory should have been created");
+    cleanup();
+});
