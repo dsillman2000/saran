@@ -14,25 +14,25 @@ This project follows a **specification-driven** development methodology within a
 
 1. **Specifications** are the source of truth — all behavior is defined in `spec/*.md`
 2. **Test specifications** define expected behavior before implementation
-3. **Rust Implementation** - Features are implemented across six specialized crates: `saran`, `saran-core`, `saran-parser`, `saran-validation`, `saran-codegen`, and `saran-types`.
+3. **Rust Implementation** - Features are implemented across five specialized crates: `saran`, `saran-core`, `saran-parser`, `saran-codegen`, and `saran-types`.
 4. **Examples** demonstrate real-world wrapper configurations
 
 **Do not implement without a corresponding specification.**
 
 ## Key Directories
 
-| Directory                   | Purpose                                     |
-| --------------------------- | ------------------------------------------- |
-| `spec/`                     | All specification documents                 |
-| `crates/`                   | Core Rust implementation (six-crate design) |
-| `spec/saran-format.md`      | YAML wrapper schema and execution model     |
-| `spec/saran-cli.md`         | User-facing CLI commands                    |
-| `spec/saran-env.md`         | Environment variable resolution             |
-| `spec/saran-conventions.md` | Wrapper naming conventions                  |
-| `spec/saran-codegen.md`     | YAML → Rust code generation                 |
-| `spec/tests/unit/`          | Unit test specifications (108 tests)        |
-| `spec/tests/integration/`   | Integration test scenarios                  |
-| `spec/examples/`            | Example wrapper configurations              |
+| Directory                   | Purpose                                      |
+| --------------------------- | -------------------------------------------- |
+| `spec/`                     | All specification documents                  |
+| `crates/`                   | Core Rust implementation (five-crate design) |
+| `spec/saran-format.md`      | YAML wrapper schema and execution model      |
+| `spec/saran-cli.md`         | User-facing CLI commands                     |
+| `spec/saran-env.md`         | Environment variable resolution              |
+| `spec/saran-conventions.md` | Wrapper naming conventions                   |
+| `spec/saran-codegen.md`     | YAML → Rust code generation                  |
+| `spec/tests/unit/`          | Unit test specifications (108 tests)         |
+| `spec/tests/integration/`   | Integration test scenarios                   |
+| `spec/examples/`            | Example wrapper configurations               |
 
 ## Specification Index
 

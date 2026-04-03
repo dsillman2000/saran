@@ -3,7 +3,6 @@ members = [
     "crates/saran",
     "crates/saran-core",
     "crates/saran-codegen",
-    "crates/saran-validation",
     "crates/saran-parser",
     "crates/saran-types",
     "crates/saran-test",
@@ -30,7 +29,6 @@ tempfile = "3.8"
 saran-types = { path = "crates/saran-types", version = "0.1.0" }
 saran-core = { path = "crates/saran-core", version = "0.1.0" }
 saran-parser = { path = "crates/saran-parser", version = "0.1.0" }
-saran-validation = { path = "crates/saran-validation", version = "0.1.0" }
 saran-codegen = { path = "crates/saran-codegen", version = "0.1.0" }
 saran-test = { path = "crates/saran-test", version = "0.1.0" }
 saran-state = { path = "crates/saran-state", version = "0.1.0" }

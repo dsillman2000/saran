@@ -15,7 +15,6 @@ serde.workspace = true
 saran-types.workspace = true
 saran-core.workspace = true
 saran-parser.workspace = true
-saran-validation.workspace = true
 saran-codegen.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true

@@ -129,14 +129,14 @@ Examples are organized by the CLI they wrap under `spec/examples/`.
 
 This branch (`impl`) contains the Rust implementation of the Saran framework. The codebase is organized as a multi-crate workspace:
 
-| Crate                     | Purpose                                                                             |
-| ------------------------- | ----------------------------------------------------------------------------------- |
-| `crates/saran`            | Main CLI for installing, managing, and validating wrappers                          |
-| `crates/saran-types`      | Core type definitions (WrapperDefinition, Command, Action, etc.) with serde support |
-| `crates/saran-parser`     | YAML parsing and token parsing; validates wrapper files against the specification   |
-| `crates/saran-core`       | Runtime types and error handling for generated wrappers                             |
-| `crates/saran-codegen`    | Transforms validated WrapperDefinition into Rust source code (clap CLI generation)  |
-| `crates/saran-validation` | Additional validation and constraint checking                                       |
+| Crate                  | Purpose                                                                             |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| `crates/saran`         | Main CLI for installing, managing, and validating wrappers                          |
+| `crates/saran-types`   | Core type definitions (WrapperDefinition, Command, Action, etc.) with serde support |
+| `crates/saran-parser`  | YAML parsing and token parsing; validates wrapper files against the specification   |
+| `crates/saran-core`    | Runtime types and error handling for generated wrappers                             |
+| `crates/saran-codegen` | Transforms validated WrapperDefinition into Rust source code (clap CLI generation)  |
+| `crates/saran-state`   | State management for env.yaml and quotas.yaml file I/O                              |
 
 All implementations follow the **specification** as the source of truth. See `spec/INDEX.md` for the complete specification map and test coverage.
 

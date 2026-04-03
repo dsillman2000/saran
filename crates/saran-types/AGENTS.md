@@ -10,7 +10,7 @@ This document guides developers maintaining the `saran-types` crate. It document
 
 `saran-types` contains **only data structure definitions**. No validation, parsing, serialization logic, or business rules.
 
-- **Validation** belongs in `saran-validation`
+- **Validation** belongs in `saran-parser`
 - **Parsing** belongs in `saran-parser`
 - **Serialization** is handled by `serde`
 - **Transformation** belongs in `saran-codegen` or `saran-core`
@@ -145,7 +145,7 @@ When the spec changes:
 2. **Update doc comments** to reflect spec changes
 3. **Update serde attributes** if serialization rules change
 4. **Add/update tests** for new variants or relationships
-5. **DO NOT add validation logic** — validation belongs in `saran-validation`
+5. **DO NOT add validation logic** — validation belongs in `saran-parser`
 
 ## Dependencies
 

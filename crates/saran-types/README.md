@@ -14,8 +14,7 @@ Core type definitions for the Saran CLI wrapper framework.
 
 These types are consumed by:
 
-- **saran-parser**: YAML → `WrapperDefinition`
-- **saran-validation**: Validates `WrapperDefinition` against schema (01-05 test specs)
+- **saran-parser**: YAML → `WrapperDefinition` + validation
 - **saran-codegen**: Transforms `WrapperDefinition` → Rust source code
 - **saran-core**: Runtime types used in generated wrappers
 - **saran CLI**: Creates and manipulates wrapper definitions
@@ -32,7 +31,7 @@ This crate contains **only type definitions and doc comments**. No business logi
 graph TD
     A["saran-types<br/>(no deps except serde)"]
     B["saran-parser<br/>saran-core<br/>(consume types)"]
-    C["saran-validation<br/>saran-codegen<br/>(transform types)"]
+    C["saran-codegen<br/>(transform types)"]
     D["saran CLI<br/>(orchestrates all)"]
 
     A --> B
