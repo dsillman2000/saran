@@ -53,12 +53,12 @@ The child process environment is **constructed by Saran**, not inherited from th
 
 ### Input & Output
 
-| Phase | Input | Output | Responsibility |
-|-------|-------|--------|-----------------|
-| 1. Parsing | wrapper.yaml | Parsed `WrapperDefinition` struct | serde_yaml |
-| 2. Validation | `WrapperDefinition` | Validation errors or success | validation crate (01-yaml-validation.md) |
-| 3. Codegen | `WrapperDefinition` | Rust source code (main.rs) | codegen crate (this spec) |
-| 4. Compilation | main.rs | Binary at `~/.local/share/saran/bin/<name>` | cargo build |
+| Phase          | Input               | Output                                      | Responsibility                           |
+| -------------- | ------------------- | ------------------------------------------- | ---------------------------------------- |
+| 1. Parsing     | wrapper.yaml        | Parsed `WrapperDefinition` struct           | serde_yaml                               |
+| 2. Validation  | `WrapperDefinition` | Validation errors or success                | validation crate (01-yaml-validation.md) |
+| 3. Codegen     | `WrapperDefinition` | Rust source code (main.rs)                  | codegen crate (this spec)                |
+| 4. Compilation | main.rs             | Binary at `~/.local/share/saran/bin/<name>` | cargo build                              |
 
 ### Generated Project Layout
 
@@ -76,7 +76,7 @@ graph TD
     J["main.rs<br/>Generated Rust code"]
     K["target/"]
     L["Build artifacts"]
-    
+
     A --> B
     A --> D
     A --> F
@@ -106,24 +106,24 @@ pub fn resolve_wrapper_vars(
 ) -> Result<HashMap<String, String>, SaranError> {
     // 1. Parse env.yaml
     let env_config = parse_env_yaml(env_yaml_path)?;
-    
+
     // 2. For each declared variable:
     //    - Check per-wrapper namespace
     //    - Fall back to global namespace
     //    - Fall back to host environment
     //    - Fall back to default value
     //    - If required and missing → error
-    
+
     let mut resolved = HashMap::new();
     let mut missing_required = Vec::new();
-    
+
     for var_decl in var_declarations {
         let value = resolve_single_var(
             &var_decl,
             wrapper_name,
             &env_config,
         );
-        
+
         match value {
             Some(v) => { resolved.insert(var_decl.name.clone(), v); }
             None if var_decl.required => {
@@ -132,11 +132,11 @@ pub fn resolve_wrapper_vars(
             None => { /* Optional var, not set - skip */ }
         }
     }
-    
+
     if !missing_required.is_empty() {
         return Err(SaranError::MissingRequiredVars(missing_required));
     }
-    
+
     Ok(resolved)
 }
 
@@ -146,24 +146,24 @@ fn resolve_single_var(
     env_config: &EnvYaml,
 ) -> Option<String> {
     // Priority chain (highest → lowest)
-    
+
     // 1. Per-wrapper namespace
     if let Some(value) = env_config.wrappers
         .get(wrapper_name)
         .and_then(|w| w.get(&var_decl.name)) {
         return Some(value.clone());
     }
-    
+
     // 2. Global namespace
     if let Some(value) = env_config.global.get(&var_decl.name) {
         return Some(value.clone());
     }
-    
+
     // 3. Host environment
     if let Ok(value) = std::env::var(&var_decl.name) {
         return Some(value);
     }
-    
+
     // 4. Default value
     var_decl.default.clone()
 }
@@ -179,19 +179,19 @@ pub fn assemble_argv(
     optional_flags: Vec<(String, String)>, // [(flag_name, value), ...]
 ) -> Result<Vec<String>, SaranError> {
     let mut argv = Vec::new();
-    
+
     // 1. Substitute variables in fixed arguments
     for arg in action_args {
         let substituted = substitute_vars(arg, resolved_vars, caller_args)?;
         argv.push(substituted);
     }
-    
+
     // 2. Append optional flags (in declaration order)
     for (flag_name, flag_value) in optional_flags {
         argv.push(flag_name);
         argv.push(flag_value);
     }
-    
+
     Ok(argv)
 }
 
@@ -202,12 +202,12 @@ pub fn substitute_vars(
 ) -> Result<String, SaranError> {
     let mut result = String::new();
     let mut chars = template.chars().peekable();
-    
+
     while let Some(ch) = chars.next() {
         if ch == '$' {
             // Parse $VAR_NAME
             let var_name = parse_var_name(&mut chars)?;
-            
+
             // Resolve from vars first, then caller args
             if let Some(value) = resolved_vars.get(var_name) {
                 result.push_str(value);
@@ -220,7 +220,7 @@ pub fn substitute_vars(
             result.push(ch);
         }
     }
-    
+
     Ok(result)
 }
 ```
@@ -234,25 +234,25 @@ pub fn exec_action(
     resolved_vars: &HashMap<String, String>,
 ) -> Result<std::process::ExitStatus, SaranError> {
     let mut cmd = std::process::Command::new(executable);
-    
+
     // Clear inherited environment
     cmd.env_clear();
-    
+
     // Copy host environment (PATH, HOME, etc.)
     for (key, value) in std::env::vars() {
         cmd.env(&key, &value);
     }
-    
+
     // Force-set resolved variables (overwriting any inherited values)
     for (key, value) in resolved_vars {
         cmd.env(key, value);
     }
-    
+
     // Build argv: [executable, ...user_args]
     for arg in argv {
         cmd.arg(arg);
     }
-    
+
     // Execute and return exit status
     let status = cmd.status()?;
     Ok(status)
@@ -296,17 +296,17 @@ enum Commands {
         /// Comma-separated fields for JSON output
         #[arg(long)]
         json: Option<String>,
-        
+
         /// Filter by state (open, closed, merged, all)
         #[arg(long)]
         state: Option<String>,
     },
-    
+
     /// View a pull request in $GH_REPO
     View {
         /// Pull request number or URL
         pr_ref: String,
-        
+
         /// Include pull request comments
         #[arg(long)]
         comments: bool,
@@ -338,15 +338,15 @@ fn get_var_declarations() -> Vec<VarDecl> {
 
 fn main() {
     let args = Cli::parse();
-    
+
     // Step 1: Resolve variables at startup
     let var_declarations = get_var_declarations();
     let wrapper_name = "gh-pr.repo.ro";
     let env_yaml_path = std::path::Path::new(
-        &format!("{}/.local/share/saran/env.yaml", 
+        &format!("{}/.local/share/saran/env.yaml",
                  std::env::var("HOME").unwrap())
     );
-    
+
     let resolved_vars = match resolve_wrapper_vars(
         wrapper_name,
         &var_declarations,
@@ -358,7 +358,7 @@ fn main() {
             process::exit(1);
         }
     };
-    
+
     // Step 2: Route to command handler
     let exit_code = match args.command {
         Commands::List { json, state } => {
@@ -368,7 +368,7 @@ fn main() {
             handle_view(&resolved_vars, &pr_ref, comments)
         }
     };
-    
+
     process::exit(exit_code);
 }
 
@@ -388,7 +388,7 @@ fn handle_list(
         "-R".to_string(),
         resolved_vars["GH_REPO"].clone(),
     ];
-    
+
     // Append optional flags
     if let Some(json_fields) = json {
         argv.push("--json".to_string());
@@ -398,7 +398,7 @@ fn handle_list(
         argv.push("--state".to_string());
         argv.push(state_val);
     }
-    
+
     // Execute: gh [pr] [list] [-R org/repo] [--json ...] [--state ...]
     match exec_action("gh", argv, resolved_vars) {
         Ok(status) => status.code().unwrap_or(1),
@@ -418,7 +418,7 @@ fn handle_view(
     let caller_args = maplit::hashmap! {
         "PR_REF" => pr_ref,
     };
-    
+
     // Build fixed action arguments with substitution
     let mut action_template = vec![
         "pr".to_string(),
@@ -427,7 +427,7 @@ fn handle_view(
         "-R".to_string(),
         resolved_vars["GH_REPO"].clone(),
     ];
-    
+
     // Perform substitution
     let argv = action_template
         .iter()
@@ -437,12 +437,12 @@ fn handle_view(
             eprintln!("error: {}", e);
             process::exit(1);
         });
-    
+
     // Append optional flags
     if comments {
         argv.push("--comments".to_string());
     }
-    
+
     // Execute: gh [pr] [view] [<pr_ref>] [-R org/repo] [--comments]
     match exec_action("gh", argv, resolved_vars) {
         Ok(status) => status.code().unwrap_or(1),
@@ -492,7 +492,8 @@ commands:
   dbsize:
     help: "Show DBSIZE for $REDIS_HOST:$REDIS_PORT db $REDIS_DB"
     actions:
-      - redis-cli: [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", DBSIZE]
+      - redis-cli:
+          [-h, "$REDIS_HOST", -p, "$REDIS_PORT", -n, "$REDIS_DB", DBSIZE]
 ```
 
 ### Generated `main.rs` (Excerpt)
@@ -516,7 +517,7 @@ struct Cli {
 enum Commands {
     /// Ping Redis at $REDIS_HOST:$REDIS_PORT db $REDIS_DB
     Ping,
-    
+
     /// Show DBSIZE for $REDIS_HOST:$REDIS_PORT db $REDIS_DB
     Dbsize,
 }
@@ -532,7 +533,7 @@ fn get_var_declarations() -> Vec<VarDecl> {
 
 fn main() {
     let args = Cli::parse();
-    
+
     let resolved_vars = match resolve_wrapper_vars(
         "redis-cli-info.db.ro",
         &get_var_declarations(),
@@ -546,12 +547,12 @@ fn main() {
             process::exit(1);
         }
     };
-    
+
     let exit_code = match args.command {
         Commands::Ping => handle_ping(&resolved_vars),
         Commands::Dbsize => handle_dbsize(&resolved_vars),
     };
-    
+
     process::exit(exit_code);
 }
 
@@ -565,7 +566,7 @@ fn handle_ping(resolved_vars: &HashMap<String, String>) -> i32 {
         resolved_vars["REDIS_DB"].clone(),
         "PING".to_string(),
     ];
-    
+
     match exec_action("redis-cli", argv, resolved_vars) {
         Ok(status) => status.code().unwrap_or(1),
         Err(e) => {
@@ -585,7 +586,7 @@ fn handle_dbsize(resolved_vars: &HashMap<String, String>) -> i32 {
         resolved_vars["REDIS_DB"].clone(),
         "DBSIZE".to_string(),
     ];
-    
+
     match exec_action("redis-cli", argv, resolved_vars) {
         Ok(status) => status.code().unwrap_or(1),
         Err(e) => {
@@ -735,7 +736,7 @@ wrappers:
   gh-pr.repo.ro:
     GH_REPO: "myorg/myrepo"
     GH_TOKEN: "ghp_xxxxx"
-  
+
   redis-cli-info.db.ro:
     REDIS_HOST: "localhost"
     REDIS_PORT: "6379"
@@ -787,22 +788,22 @@ fn exec_action(
     resolved_vars: &HashMap<String, String>,
 ) -> Result<ExitStatus, SaranError> {
     let mut cmd = std::process::Command::new(executable);
-    
+
     // 1. Clear inherited environment
     cmd.env_clear();
-    
+
     // 2. Re-inherit safe values from host
     for key in SAFE_ENV_VARS {  // PATH, HOME, LANG, TZ, etc.
         if let Ok(val) = std::env::var(key) {
             cmd.env(key, val);
         }
     }
-    
+
     // 3. Force-set resolved variables (overwriting any inherited values)
     for (key, val) in resolved_vars {
         cmd.env(key, val);
     }
-    
+
     // 4. Execute via execvp
     cmd.args(&argv).status()
 }
@@ -845,16 +846,16 @@ fn test_codegen_required_var() {
         actions:
           - echo: ["$REQUIRED_VAR"]
     "#;
-    
+
     let wrapper = parse_wrapper(yaml).unwrap();
     let generated = codegen::generate(&wrapper).unwrap();
-    
+
     // Assert generated code includes variable resolution
     assert!(generated.contains("resolve_wrapper_vars"));
-    
+
     // Assert generated code checks for missing required vars
     assert!(generated.contains("required: true"));
-    
+
     // Assert generated code has error handling
     assert!(generated.contains("process::exit(1)"));
 }
@@ -872,13 +873,13 @@ fn test_codegen_substitution() {
         actions:
           - gh: [pr, list, -R, "$REPO"]
     "#;
-    
+
     let wrapper = parse_wrapper(yaml).unwrap();
     let generated = codegen::generate(&wrapper).unwrap();
-    
+
     // Assert generated code performs substitution
     assert!(generated.contains("substitute_vars"));
-    
+
     // Assert argv is correctly assembled
     assert!(generated.contains("-R"));
     assert!(generated.contains("$REPO"));
@@ -899,7 +900,7 @@ fn test_codegen_substitution() {
 
 ```rust
 fn main() {
-    // ... 
+    // ...
     let resolved_vars = match resolve_wrapper_vars(...) {
         Ok(vars) => vars,
         Err(e) => {

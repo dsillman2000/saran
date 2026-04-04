@@ -4,7 +4,7 @@
 
 The `saran` binary is a wrapper generator and management tool. When invoked directly as `saran`, it provides subcommands for installing, removing, listing, and validating wrappers. When you install a wrapper from a YAML file, Saran compiles a standalone CLI binary that can be invoked directly by name — no routing or YAML parsing at runtime.
 
-> **See also:** [`saran-format.md`](saran-format.md) for the wrapper YAML format, [`saran-env.md`](saran-env.md) for the `saran env` command.
+> **See also:** [`saran-format.md`](saran-format.md) for the wrapper YAML format, [`saran-env.md`](saran-env.md) for the `saran env` command, and `crates/saran-state/` for implementation details.
 
 ---
 
@@ -29,7 +29,7 @@ graph TD
     F["gh-pr.repo.ro.yaml"]
     G["gh-issue.ro.yaml"]
     H["env.yaml<br/>Runtime variable configuration"]
-    
+
     A --> B
     A --> E
     A --> H
@@ -40,6 +40,7 @@ graph TD
 ```
 
 > **PATH setup:** Add `~/.local/share/saran/bin` to your shell `PATH` to make installed wrappers directly invocable by name:
+>
 > ```bash
 > export PATH="$HOME/.local/share/saran/bin:$PATH"
 > ```
@@ -92,11 +93,11 @@ saran install --git github.com/myorg/saran-wrappers wrappers/gh-pr.repo.ro.yaml
 
 **URL format:** The `--git` value is a repository URL. The following formats are accepted:
 
-| Format | Example |
-|---|---|
-| Shorthand (GitHub assumed) | `github.com/myorg/myrepo` |
-| Full HTTPS URL | `https://github.com/myorg/myrepo` |
-| SSH URL | `git@github.com:myorg/myrepo.git` |
+| Format                     | Example                           |
+| -------------------------- | --------------------------------- |
+| Shorthand (GitHub assumed) | `github.com/myorg/myrepo`         |
+| Full HTTPS URL             | `https://github.com/myorg/myrepo` |
+| SSH URL                    | `git@github.com:myorg/myrepo.git` |
 
 **Path argument:** If no path is specified, Saran looks for all `*.yaml` files at the repository root that are valid Saran wrapper files and installs them all. If a path is specified, only that file is installed.
 
@@ -113,11 +114,11 @@ If no `@ref` is specified, the default branch HEAD is used.
 
 ### Flags
 
-| Flag | Description |
-|---|---|
-| `--force` | Overwrite an existing wrapper with the same name |
-| `--git <url>` | Install from a remote Git repository |
-| `--dry-run` | Validate and print what would be installed without making changes |
+| Flag          | Description                                                       |
+| ------------- | ----------------------------------------------------------------- |
+| `--force`     | Overwrite an existing wrapper with the same name                  |
+| `--git <url>` | Install from a remote Git repository                              |
+| `--dry-run`   | Validate and print what would be installed without making changes |
 
 ---
 
@@ -130,6 +131,7 @@ saran remove <name> [<name> ...]
 ```
 
 For each named wrapper:
+
 1. Removes the binary at `~/.local/share/saran/bin/<name>`
 2. Removes the wrapper file at `~/.local/share/saran/wrappers/<name>.yaml`
 3. Removes any per-wrapper entries for `<name>` from `~/.local/share/saran/env.yaml`
@@ -143,10 +145,10 @@ If the named wrapper is not installed, `saran remove` exits with an error.
 
 ### Flags
 
-| Flag | Description |
-|---|---|
+| Flag         | Description                                                                       |
+| ------------ | --------------------------------------------------------------------------------- |
 | `--keep-env` | Remove the wrapper binary and YAML but preserve per-wrapper entries in `env.yaml` |
-| `--dry-run` | Print what would be removed without making changes |
+| `--dry-run`  | Print what would be removed without making changes                                |
 
 ---
 
@@ -246,8 +248,8 @@ saran quotas reset-all
 
 ### Flags
 
-| Flag | Description |
-|---|---|
+| Flag     | Description                                        |
+| -------- | -------------------------------------------------- |
 | `--json` | Output in JSON format for programmatic consumption |
 
 ---

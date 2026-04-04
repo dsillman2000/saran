@@ -22,18 +22,24 @@ Redis is ideal for integration testing:
 ## What Gets Tested
 
 ### Constraint Enforcement
+
 Wrappers should only expose intended operations:
+
 - Read-only wrappers block write operations (DEL, FLUSHDB, etc.)
 - Write-limited wrappers expose only approved operations
 - Users cannot invoke undeclared commands
 
 ### Variable Injection
+
 Environment variables inject correctly into CLI commands:
+
 - `REDIS_HOST`, `REDIS_PORT` pass through to redis-cli
 - Missing required variables produce clear startup errors
 
 ### Error Handling
+
 Wrappers handle failures gracefully:
+
 - Connection failures return descriptive errors
 - Invalid inputs are rejected before CLI execution
 
@@ -45,7 +51,7 @@ graph TD
     B["redis/<br/>Wrapper definitions<br/>for testing"]
     C["*.yaml"]
     D["README.md<br/>This file"]
-    
+
     A --> B
     A --> D
     B --> C

@@ -6,19 +6,20 @@ This directory contains **108 unit test specifications** for Saran, organized fo
 
 ## Test Suites
 
-| Suite | Tests | Scope | Dependencies |
-|-------|-------|-------|--------------|
-| **[01-yaml-validation.md](./01-yaml-validation.md)** | 59 | Static schema validation of wrapper YAML files | None (pure validation) |
-| **[02-token-parsing.md](./02-token-parsing.md)** | 6 | Pure parsing of `$VAR_NAME` tokens from strings | None (pure string ops) |
-| **[03-variable-resolution.md](./03-variable-resolution.md)** | 14 | Runtime variable resolution chain (per-wrapper → global → host → default) | Mock parsed env.yaml |
-| **[04-substitution-resolution.md](./04-substitution-resolution.md)** | 10 | Resolving tokens to values (vars + args) | Mock tokens + variable values |
-| **[05-argument-assembly.md](./05-argument-assembly.md)** | 19 | Construction of child process `argv` from actions, vars, args, and flags | Mock substituted args + flags |
+| Suite                                                                | Tests | Scope                                                                     | Dependencies                  |
+| -------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------- | ----------------------------- |
+| **[01-yaml-validation.md](./01-yaml-validation.md)**                 | 59    | Static schema validation of wrapper YAML files                            | None (pure validation)        |
+| **[02-token-parsing.md](./02-token-parsing.md)**                     | 6     | Pure parsing of `$VAR_NAME` tokens from strings                           | None (pure string ops)        |
+| **[03-variable-resolution.md](./03-variable-resolution.md)**         | 14    | Runtime variable resolution chain (per-wrapper → global → host → default) | Mock parsed env.yaml          |
+| **[04-substitution-resolution.md](./04-substitution-resolution.md)** | 10    | Resolving tokens to values (vars + args)                                  | Mock tokens + variable values |
+| **[05-argument-assembly.md](./05-argument-assembly.md)**             | 19    | Construction of child process `argv` from actions, vars, args, and flags  | Mock substituted args + flags |
 
 **Total: 108 unit tests**
 
 ## Implementation Strategy
 
 ### Phase 1: Pure Functions (Week 1)
+
 ```bash
 # These can be implemented and tested in parallel
 cargo test --test yaml_validation     # 59 tests
@@ -26,6 +27,7 @@ cargo test --test token_parsing       # 6 tests
 ```
 
 ### Phase 2: Data Transformations (Week 2)
+
 ```bash
 # Test with mocked dependencies
 cargo test --test variable_resolution  # 14 tests (mock env.yaml)
@@ -34,6 +36,7 @@ cargo test --test argument_assembly    # 19 tests (mock substituted args)
 ```
 
 ### Phase 3: Integration (Week 3)
+
 ```bash
 # Wire everything together
 cargo test --test integration          # End-to-end tests
@@ -61,7 +64,7 @@ graph TD
     H["04-substitution-resolution.md<br/>10 tests - Mock tokens + values"]
     I["05-argument-assembly.md<br/>19 tests - Mock substituted args"]
     J["_archive/<br/>Historical analysis docs"]
-    
+
     A --> B
     A --> C
     A --> D
@@ -78,8 +81,8 @@ graph TD
 Each test specification follows this format:
 
 ```markdown
-| ID | Test Purpose | Test Case Description | Expected Result |
-|----|-------------|----------------------|-----------------|
+| ID    | Test Purpose                      | Test Case Description                                    | Expected Result              |
+| ----- | --------------------------------- | -------------------------------------------------------- | ---------------------------- |
 | VR-01 | Valid variable reference resolves | Reference `$GH_REPO` where `GH_REPO` declared in `vars:` | Resolves to variable's value |
 ```
 
