@@ -4,7 +4,7 @@
 
 The `saran` binary is a wrapper generator and management tool. When invoked directly as `saran`, it provides subcommands for installing, removing, listing, and validating wrappers. When you install a wrapper from a YAML file, Saran compiles a standalone CLI binary that can be invoked directly by name — no routing or YAML parsing at runtime.
 
-> **See also:** [`saran-format.md`](saran-format.md) for the wrapper YAML format, [`saran-env.md`](saran-env.md) for the `saran env` command, and `crates/saran-state/` for implementation details.
+> **See also:** [`saran-format.md`](saran-format.md) for the wrapper YAML format, [`saran-env.md`](saran-env.md) for the `saran env` command, and [`saran-state.md`](saran-state.md) for state management details.
 
 ---
 

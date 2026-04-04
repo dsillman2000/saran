@@ -15,6 +15,7 @@ This document maps all Saran specifications and their relationships. Use this to
 | **[saran-env.md](./saran-env.md)**                 | Environment variable resolution and configuration     | Operators, developers       | ✅ Complete                 |
 | **[saran-conventions.md](./saran-conventions.md)** | Wrapper naming conventions and scoping patterns       | Wrapper authors             | ✅ Complete                 |
 | **[saran-codegen.md](./saran-codegen.md)**         | How YAML is transformed into executable Rust code     | Developers, code reviewers  | ✅ Complete (this document) |
+| **[saran-state.md](./saran-state.md)**             | env.yaml/quotas.yaml I/O, data directory management   | Developers, operators       | ✅ Complete                 |
 
 ---
 
@@ -252,6 +253,7 @@ graph TD
 - Code generation design (saran-codegen.md)
 - Integration test scenarios (ro.yaml)
 - State management crate (saran-state) — spec complete
+  - See: `spec/saran-state.md`
 
 📋 **To Specify**
 
@@ -366,12 +368,10 @@ graph TD
 
 ## Next Steps
 
-1. **Implement saran-state crate** ← Next priority
+1. **Review saran-state.md** ← Ready
 
-   - Phase 2: Crate setup (Cargo.toml, lib.rs)
-   - Phase 3: env.yaml operations (14 tests)
-   - Phase 4: quotas.yaml operations (10 tests)
-   - See: `crates/saran-state/to-do.md`
+   - State management crate implementation is complete
+   - See: `spec/saran-state.md`
 
 2. **Add code generation test spec** (details of what unit tests should verify)
 3. **Add error handling taxonomy** (error codes and messages)
