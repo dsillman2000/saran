@@ -12,24 +12,17 @@ This crate is used by both the main `saran` CLI (for `saran env` and `saran quot
 
 ## File Locations
 
-| File               | Default Location        | Override                 |
-| ------------------ | ----------------------- | ------------------------ |
-| Data directory     | `~/.local/share/saran/` | `SARAN_DATA_DIR` env var |
-| Environment config | `$DATA_DIR/env.yaml`    | `SARAN_DATA_DIR`         |
-| Quota state        | `$DATA_DIR/quotas.yaml` | `SARAN_DATA_DIR`         |
-
-> **Note:** `SARAN_DATA_DIR` must be an absolute path. Relative paths are rejected.
+| File               | Default Location                   |
+| ------------------ | ---------------------------------- |
+| Data directory     | `~/.local/share/saran/`            |
+| Environment config | `~/.local/share/saran/env.yaml`    |
+| Quota state        | `~/.local/share/saran/quotas.yaml` |
 
 ---
 
-## Data Directory Resolution
+## Data Directory
 
-The data directory is resolved at startup in the following priority order:
-
-1. **Highest:** `SARAN_DATA_DIR` environment variable (if set and absolute)
-2. **Default:** `$HOME/.local/share/saran/` (Unix), `%LOCALAPPDATA%\saran\` (Windows)
-
-If neither `SARAN_DATA_DIR` nor `HOME`/`LOCALAPPDATA` is set, `SaranState` initialization fails with an error.
+The data directory is always `~/.local/share/saran/` on Unix systems and `%LOCALAPPDATA%\saran\` on Windows.
 
 ---
 

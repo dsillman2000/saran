@@ -15,9 +15,9 @@
 //! - [`QuotasState`] — In-memory representation of `quotas.yaml`
 //!
 //! ## File Locations
-//! - Data directory: `~/.local/share/saran/` (can be overridden by `SARAN_DATA_DIR` env var)
-//! - Environment: `$SARAN_DATA_DIR/env.yaml` (falls back to `~/.local/share/saran/env.yaml`)
-//! - Quotas: `$SARAN_DATA_DIR/quotas.yaml` (falls back to `~/.local/share/saran/quotas.yaml`)
+//! - Data directory: `~/.local/share/saran/` (always used, cannot be customized)
+//! - Environment: `~/.local/share/saran/env.yaml`
+//! - Quotas: `~/.local/share/saran/quotas.yaml`
 //!
 //! ## Concurrency
 //! The crate assumes no concurrent execution of Saran wrappers.

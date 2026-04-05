@@ -109,12 +109,11 @@ Unit tests for the state management system defined in `saran-env.md`. These test
 
 ### Data Directory Resolution
 
-| ID    | Test Purpose                          | Test Case Description                                          | Expected Result                                                    |
-| ----- | ------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------ |
-| SD-01 | Default path resolved from `$HOME`    | No `SARAN_DATA_DIR` set; `HOME` is set                         | `data_dir()` returns `$HOME/.local/share/saran`                    |
-| SD-02 | Relative `SARAN_DATA_DIR` is rejected | Set `SARAN_DATA_DIR` to a relative path (e.g. `relative/path`) | `SaranState::new()` returns `Err` containing "absolute"            |
-| SD-03 | Missing `HOME` with no override fails | Unset both `SARAN_DATA_DIR` and `HOME`                         | `SaranState::new()` returns `Err` containing "HOME"                |
-| SD-04 | `ensure_data_dir` creates missing dir | Point `SARAN_DATA_DIR` at a deeply-nested non-existent path    | After `ensure_data_dir()`, the full directory hierarchy is created |
+| ID    | Test Purpose                          | Test Case Description                            | Expected Result                                                    |
+| ----- | ------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
+| SD-01 | Default path resolved from `$HOME`    | `$HOME` is set                                   | `data_dir()` returns `$HOME/.local/share/saran`                    |
+| SD-02 | Missing `HOME` fails                  | Unset `HOME`                                     | `SaranState::new()` returns `Err` containing "HOME"                |
+| SD-03 | `ensure_data_dir` creates missing dir | Path points at a deeply-nested non-existent path | After `ensure_data_dir()`, the full directory hierarchy is created |
 
 ---
 

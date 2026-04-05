@@ -10,24 +10,24 @@ use crate::error::StateError;
 ///
 /// Provides methods for reading/writing environment variables and
 /// managing quota state. All operations are scoped to the data directory
-/// determined by `SARAN_DATA_DIR` environment variable or default location.
+/// `~/.local/share/saran/` on Unix or `%LOCALAPPDATA%\saran\` on Windows.
 #[derive(Debug, Clone)]
 pub struct SaranState {
     data_dir: PathBuf,
 }
 
 impl SaranState {
-    /// Creates a new `SaranState` instance using the configured data directory.
+    /// Creates a new `SaranState` instance using the data directory.
     ///
-    /// # Data Directory Resolution
+    /// # Data Directory
     ///
-    /// 1. `SARAN_DATA_DIR` environment variable (if set)
-    /// 2. Default: `$HOME/.local/share/saran/` (Unix) or `%LOCALAPPDATA%\saran\` (Windows)
+    /// Always uses `$HOME/.local/share/saran/` (Unix) or `%LOCALAPPDATA%\saran\` (Windows).
+    /// The location cannot be customized.
     ///
     /// # Errors
     ///
     /// Returns `StateError::Env` if:
-    /// - The data directory cannot be determined (e.g., `HOME` not set)
+    /// - The home directory cannot be determined (e.g., `HOME` not set)
     /// - The data directory cannot be created
     pub fn new() -> Result<Self, StateError> {
         let data_dir = resolve_data_dir()?;
@@ -59,24 +59,24 @@ impl SaranState {
         }
         Ok(())
     }
+
+    /// Creates a new `SaranState` instance with a custom data directory.
+    ///
+    /// **For testing only.** Use `SaranState::new()` in production.
+    #[cfg(test)]
+    pub fn with_data_dir(data_dir: PathBuf) -> Self {
+        Self { data_dir }
+    }
 }
 
 /// Resolves the Saran data directory path.
 ///
-/// See `SaranState::new()` for resolution priority.
+/// Always returns `~/.local/share/saran/` (Unix) or `%LOCALAPPDATA%\saran\` (Windows).
 fn resolve_data_dir() -> Result<PathBuf, StateError> {
-    // 1. SARAN_DATA_DIR environment variable
-    if let Ok(custom_dir) = env::var("SARAN_DATA_DIR") {
-        let path = PathBuf::from(custom_dir);
-        if path.is_absolute() {
-            return Ok(path);
-        } else {
-            return Err(StateError::env("SARAN_DATA_DIR must be an absolute path"));
-        }
-    }
-
-    // 2. Default platform-specific location
+    // Get home directory
     let home_dir = get_home_dir()?;
+
+    // Platform-specific default path
     #[cfg(target_family = "unix")]
     let default_path = home_dir.join(".local/share/saran");
     #[cfg(target_family = "windows")]

@@ -67,10 +67,7 @@ pub struct QuotaStateEntry {
 
 ## Data Directory
 
-The data directory is determined as follows:
-
-1. `SARAN_DATA_DIR` environment variable (if set)
-2. Default: `$HOME/.local/share/saran/` (Unix) or `%LOCALAPPDATA%\saran\` (Windows)
+The data directory is always `~/.local/share/saran/` on Unix systems and `%LOCALAPPDATA%\saran\` on Windows. It cannot be customized and is created automatically if it doesn't exist.
 
 ## Error Handling
 

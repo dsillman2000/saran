@@ -21,7 +21,7 @@ The `saran-state` crate handles persistent state management for Saran: reading/w
 | File locking   | None                    | Concurrent execution not supported (per spec) |
 | Error handling | `thiserror`             | Consistent with other saran crates            |
 | Storage format | YAML                    | Human-readable, matches existing spec         |
-| Data directory | `~/.local/share/saran/` | Can be overridden by `SARAN_DATA_DIR` env var |
+| Data directory | `~/.local/share/saran/` | Fixed location, always used                   |
 
 ## Module Structure
 
@@ -34,12 +34,9 @@ src/
 └── quotas.rs       # quotas.yaml operations (QuotasState, QuotaEntry)
 ```
 
-## Data Directory Resolution
+## Data Directory
 
-The data directory is determined as follows (highest priority first):
-
-1. `SARAN_DATA_DIR` environment variable (if set)
-2. Default: `$HOME/.local/share/saran/` (Unix), `%LOCALAPPDATA%\saran\` (Windows)
+The data directory is always `~/.local/share/saran/` on Unix systems and `%LOCALAPPDATA%\saran\` on Windows. It cannot be customized.
 
 Functions must use `SaranState::data_dir()` or `SaranState::new()` to ensure consistent path resolution.
 

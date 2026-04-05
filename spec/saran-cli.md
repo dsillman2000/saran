@@ -262,12 +262,6 @@ All Saran state lives under `~/.local/share/saran/` by default:
 ~/.local/share/saran/
   bin/          Compiled wrapper binaries (add to PATH)
   wrappers/     Source YAML files (for regeneration, inspection)
-  env.yaml      Operator-managed variable configuration
-  quotas.yaml   Quota state tracking (one file per wrapper)
-```
-
-The data directory can be overridden by setting the `SARAN_DATA_DIR` environment variable:
-
-```bash
-export SARAN_DATA_DIR=/opt/saran
+   env.yaml      Operator-managed variable configuration
+   quotas.yaml   Quota state tracking (one file per wrapper)
 ```
